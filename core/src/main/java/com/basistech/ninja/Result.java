@@ -19,5 +19,21 @@
 
 package com.basistech.ninja;
 
-public class FeedforwardNetTest {
+public class Result {
+    private final int id;
+    private final double score;
+
+    public Result(int id, double score) {
+        this.id = id;
+        this.score = score;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
 }
