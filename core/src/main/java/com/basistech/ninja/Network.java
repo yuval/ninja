@@ -34,9 +34,9 @@ public class Network {
     }
 
     public SimpleMatrix feedForward(SimpleMatrix input) {
-        SimpleMatrix result = sigmoid(input.mult(inputWeights));
+        SimpleMatrix result = sigmoid(inputWeights.mult(input));
         for (SimpleMatrix hidden : hiddenWeights) {
-            result = sigmoid(result.mult(hidden));
+            result = sigmoid(hidden.mult(result));
         }
         return result;
     }
