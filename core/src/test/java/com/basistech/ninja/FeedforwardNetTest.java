@@ -19,5 +19,102 @@
 
 package com.basistech.ninja;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class FeedforwardNetTest {
+    private boolean isZero(Matrix m) {
+        if (m.getRows() != 1 && m.getColumns() != 1) {
+            throw new RuntimeException("only 1x1 matrix supported; got " + m.getDimensions());
+        }
+        double value = m.get(0, 0);
+        return value > 0.0 && value < 0.1;
+    }
+
+    private boolean isOne(Matrix m) {
+        if (m.getRows() != 1 && m.getColumns() != 1) {
+            throw new RuntimeException("only 1x1 matrix supported; got " + m.getDimensions());
+        }
+        double value = m.get(0, 0);
+        return value > 0.9 && value < 1.0;
+    }
+
+    @Test
+    public void testAnd() {
+        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, -15, 10, 10));
+        assertTrue(isZero(net.apply(1, 0, 0)));
+        assertTrue(isZero(net.apply(1, 0, 1)));
+        assertTrue(isZero(net.apply(1, 1, 0)));
+        assertTrue(isOne(net.apply(1, 1, 1)));
+    }
+
+    @Test
+    public void testOr() {
+        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, -15, 20, 20));
+        assertTrue(isZero(net.apply(1, 0, 0)));
+        assertTrue(isOne(net.apply(1, 0, 1)));
+        assertTrue(isOne(net.apply(1, 1, 0)));
+        assertTrue(isOne(net.apply(1, 1, 1)));
+    }
+
+    @Test
+    public void testNot() {
+        FeedforwardNet net = new FeedforwardNet(2, 1, new Matrix(1, 2, 5, -10));
+        assertTrue(isOne(net.apply(1, 0)));
+        assertTrue(isZero(net.apply(1, 1)));
+    }
+
+    @Test
+    public void testNand() {
+        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, 15, -10, -10));
+        assertTrue(isOne(net.apply(1, 0, 0)));
+        assertTrue(isOne(net.apply(1, 0, 1)));
+        assertTrue(isOne(net.apply(1, 1, 0)));
+        assertTrue(isZero(net.apply(1, 1, 1)));
+    }
+
+    @Test
+    public void testThreeLayerNand() {
+        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, -15, 10, 10), new Matrix(1, 2, 5, -10));
+        assertTrue(isOne(net.apply(1, 0, 0)));
+        assertTrue(isOne(net.apply(1, 0, 1)));
+        assertTrue(isOne(net.apply(1, 1, 0)));
+        assertTrue(isZero(net.apply(1, 1, 1)));
+    }
+
+    @Test
+    public void testFullThreeLayer() {
+        // TODO: make bias implicit
+        // TODO: something better than insertBias
+        // TODO: maybe recursive or control how many applies
+
+        Matrix z2 = new Matrix(4, 4,
+                1, 2, 3, 4,
+                5, 6, 7, 8,
+                9, 10, 11, 12,
+                13, 14, 15, 16
+        );
+        Matrix z3 = new Matrix(2, 5,
+                1, 2, 3, 4, 5,
+                -6, -7, -8, -9 ,-10
+        );
+
+        FeedforwardNet net = new FeedforwardNet(Functions.IDENTITY, 4, 2, z2, z3);
+        Matrix output = net.apply(1, 1, 1, 1);
+        System.out.println(output);
+        assertEquals(2, output.getRows());
+        assertEquals(1, output.getColumns());
+        assertEquals(557.0, output.get(0, 0), 0.00001);
+        assertEquals(-1242.0, output.get(1, 0), 0.00001);
+
+        net = new FeedforwardNet(Functions.SIGMOID, 4, 2, z2, z3);
+        output = net.apply(1, 1, 1, 1);
+        System.out.println(output);
+        assertEquals(2, output.getRows());
+        assertEquals(1, output.getColumns());
+        assertEquals(1.0, output.get(0, 0), 0.00001);
+        assertEquals(0.0, output.get(1, 0), 0.00001);
+    }
 }

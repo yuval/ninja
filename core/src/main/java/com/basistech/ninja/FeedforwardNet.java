@@ -20,4 +20,36 @@
 package com.basistech.ninja;
 
 public class FeedforwardNet {
+    private final Function f;
+    private final int inputCount;
+    private final int outputCount;
+    private final Matrix[] w;
+
+    FeedforwardNet(int inputCount, int outputCount, Matrix ... w) {
+        this.f = Functions.SIGMOID;
+        this.inputCount = inputCount;
+        this.outputCount = outputCount;
+        this.w = w;
+    }
+
+    FeedforwardNet(Function f, int inputCount, int outputCount, Matrix ... w) {
+        this.f = f;
+        this.inputCount = inputCount;
+        this.outputCount = outputCount;
+        this.w = w;
+    }
+
+    Matrix apply(double ... values) {
+        int layers = w.length + 1;
+        Matrix[] a = new Matrix[layers];
+        a[0] = new Matrix(values.length, 1, values);
+        //return Matrix.multiply(w[0], a[0]).apply(f);
+        for (int l = 1; l < layers; l++) {
+            a[l] = Matrix.multiply(w[l - 1], a[l - 1]).apply(f);
+            if (l != layers - 1) {
+                a[l] = a[l].insertBias();
+            }
+        }
+        return a[layers - 1];
+    }
 }
