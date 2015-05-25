@@ -11,12 +11,8 @@
      <compiler.fork>false</compiler.fork>
      <jdk.level>1.7</jdk.level>
      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-
      <maven-checkstyle-plugin.version>2.13</maven-checkstyle-plugin.version>
      <maven-pmd-plugin.version>3.1</maven-pmd-plugin.version>
-
-
   </properties>
   <modules>
      <module>core</module>
