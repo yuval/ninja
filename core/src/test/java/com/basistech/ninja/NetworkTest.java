@@ -19,5 +19,5 @@
 
 package com.basistech.ninja;
 
-public class FeedforwardNetTest {
+public class NetworkTest {
 }
