@@ -19,35 +19,36 @@
 
 package com.basistech.ninja;
 
-public class FeedforwardNet {
-    private final Function f;
-    private final int inputCount;
-    private final int outputCount;
-    private final Matrix[] w;
+import org.ejml.simple.SimpleMatrix;
 
-    FeedforwardNet(int inputCount, int outputCount, Matrix ... w) {
-        this.f = Functions.SIGMOID;
-        this.inputCount = inputCount;
-        this.outputCount = outputCount;
+public class Network {
+    private final SimpleMatrix[] w;
+    private final Function activationFunction;
+
+    public Network(SimpleMatrix ... w) {
+        this(Functions.SIGMOID, w);
+
+    }
+
+    public Network(Function activationFunction, SimpleMatrix ... w) {
+        this.activationFunction = activationFunction;
         this.w = w;
     }
 
-    FeedforwardNet(Function f, int inputCount, int outputCount, Matrix ... w) {
-        this.f = f;
-        this.inputCount = inputCount;
-        this.outputCount = outputCount;
-        this.w = w;
-    }
-
-    Matrix apply(double ... values) {
+    SimpleMatrix apply(double ... values) {
         int layers = w.length + 1;
-        Matrix[] a = new Matrix[layers];
-        a[0] = new Matrix(values.length, 1, values);
-        //return Matrix.multiply(w[0], a[0]).apply(f);
+        SimpleMatrix[] a = new SimpleMatrix[layers];
+        a[0] = new SimpleMatrix(values.length, 1, true, values);
         for (int l = 1; l < layers; l++) {
-            a[l] = Matrix.multiply(w[l - 1], a[l - 1]).apply(f);
+            a[l] = Functions.apply(activationFunction, w[l - 1].mult(a[l - 1]));
             if (l != layers - 1) {
-                a[l] = a[l].insertBias();
+                // TODO: find better way to insert the bias!
+                SimpleMatrix tmp = new SimpleMatrix(a[l].numRows() + 1, 1);
+                tmp.set(0, 0, 1.0);
+                for (int i = 0; i < a[l].numRows(); i++) {
+                    tmp.set(i + 1, 0, a[l].get(i, 0));
+                }
+                a[l] = tmp;
             }
         }
         return a[layers - 1];

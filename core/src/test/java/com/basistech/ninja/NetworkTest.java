@@ -19,23 +19,26 @@
 
 package com.basistech.ninja;
 
+import org.ejml.simple.SimpleMatrix;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class FeedforwardNetTest {
-    private boolean isZero(Matrix m) {
-        if (m.getRows() != 1 && m.getColumns() != 1) {
-            throw new RuntimeException("only 1x1 matrix supported; got " + m.getDimensions());
+public class NetworkTest {
+    private boolean isZero(SimpleMatrix m) {
+        if (m.numRows() != 1 && m.numCols() != 1) {
+            throw new RuntimeException(String.format(
+                    "only 1x1 matrix supported; got %dx%d", m.numRows(), m.numCols()));
         }
         double value = m.get(0, 0);
         return value > 0.0 && value < 0.1;
     }
 
-    private boolean isOne(Matrix m) {
-        if (m.getRows() != 1 && m.getColumns() != 1) {
-            throw new RuntimeException("only 1x1 matrix supported; got " + m.getDimensions());
+    private boolean isOne(SimpleMatrix m) {
+        if (m.numRows() != 1 && m.numCols() != 1) {
+            throw new RuntimeException(String.format(
+                    "only 1x1 matrix supported; got %dx%d", m.numRows(), m.numCols()));
         }
         double value = m.get(0, 0);
         return value > 0.9 && value < 1.0;
@@ -43,7 +46,8 @@ public class FeedforwardNetTest {
 
     @Test
     public void testAnd() {
-        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, -15, 10, 10));
+        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
+        Network net = new Network(w1);
         assertTrue(isZero(net.apply(1, 0, 0)));
         assertTrue(isZero(net.apply(1, 0, 1)));
         assertTrue(isZero(net.apply(1, 1, 0)));
@@ -52,7 +56,8 @@ public class FeedforwardNetTest {
 
     @Test
     public void testOr() {
-        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, -15, 20, 20));
+        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 20, 20);
+        Network net = new Network(w1);
         assertTrue(isZero(net.apply(1, 0, 0)));
         assertTrue(isOne(net.apply(1, 0, 1)));
         assertTrue(isOne(net.apply(1, 1, 0)));
@@ -61,14 +66,16 @@ public class FeedforwardNetTest {
 
     @Test
     public void testNot() {
-        FeedforwardNet net = new FeedforwardNet(2, 1, new Matrix(1, 2, 5, -10));
+        SimpleMatrix w1 = new SimpleMatrix(1, 2, true, 5, -10);
+        Network net = new Network(w1);
         assertTrue(isOne(net.apply(1, 0)));
         assertTrue(isZero(net.apply(1, 1)));
     }
 
     @Test
     public void testNand() {
-        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, 15, -10, -10));
+        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, 15, -10, -10);
+        Network net = new Network(w1);
         assertTrue(isOne(net.apply(1, 0, 0)));
         assertTrue(isOne(net.apply(1, 0, 1)));
         assertTrue(isOne(net.apply(1, 1, 0)));
@@ -77,7 +84,9 @@ public class FeedforwardNetTest {
 
     @Test
     public void testThreeLayerNand() {
-        FeedforwardNet net = new FeedforwardNet(3, 1, new Matrix(1, 3, -15, 10, 10), new Matrix(1, 2, 5, -10));
+        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
+        SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
+        Network net = new Network(w1, w2);
         assertTrue(isOne(net.apply(1, 0, 0)));
         assertTrue(isOne(net.apply(1, 0, 1)));
         assertTrue(isOne(net.apply(1, 1, 0)));
@@ -118,30 +127,30 @@ public class FeedforwardNetTest {
         // array([[  557],
         //        [-1242]])
 
-        Matrix z2 = new Matrix(4, 4,
+        SimpleMatrix z2 = new SimpleMatrix(4, 4, true,
                 1, 2, 3, 4,
                 5, 6, 7, 8,
                 9, 10, 11, 12,
                 13, 14, 15, 16
         );
-        Matrix z3 = new Matrix(2, 5,
+        SimpleMatrix z3 = new SimpleMatrix(2, 5, true,
                 1, 2, 3, 4, 5,
                 -6, -7, -8, -9 ,-10
         );
 
-        FeedforwardNet net = new FeedforwardNet(Functions.IDENTITY, 4, 2, z2, z3);
-        Matrix output = net.apply(1, 1, 1, 1);
-        System.out.println(output);
-        assertEquals(2, output.getRows());
-        assertEquals(1, output.getColumns());
+        Network net;
+        SimpleMatrix output;
+        net = new Network(Functions.IDENTITY, z2, z3);
+        output = net.apply(1, 1, 1, 1);
+        assertEquals(2, output.numRows());
+        assertEquals(1, output.numCols());
         assertEquals(557.0, output.get(0, 0), 0.00001);
         assertEquals(-1242.0, output.get(1, 0), 0.00001);
 
-        net = new FeedforwardNet(Functions.SIGMOID, 4, 2, z2, z3);
+        net = new Network(Functions.SIGMOID, z2, z3);
         output = net.apply(1, 1, 1, 1);
-        System.out.println(output);
-        assertEquals(2, output.getRows());
-        assertEquals(1, output.getColumns());
+        assertEquals(2, output.numRows());
+        assertEquals(1, output.numCols());
         assertEquals(1.0, output.get(0, 0), 0.00001);
         assertEquals(0.0, output.get(1, 0), 0.00001);
     }
