@@ -48,38 +48,38 @@ public class NetworkTest {
     public void testAnd() {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
         Network net = new Network(w1);
-        assertTrue(isZero(net.apply(1, 0, 0)));
-        assertTrue(isZero(net.apply(1, 0, 1)));
-        assertTrue(isZero(net.apply(1, 1, 0)));
-        assertTrue(isOne(net.apply(1, 1, 1)));
+        assertTrue(isZero(net.apply(0, 0)));
+        assertTrue(isZero(net.apply(0, 1)));
+        assertTrue(isZero(net.apply(1, 0)));
+        assertTrue(isOne(net.apply(1, 1)));
     }
 
     @Test
     public void testOr() {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 20, 20);
         Network net = new Network(w1);
-        assertTrue(isZero(net.apply(1, 0, 0)));
-        assertTrue(isOne(net.apply(1, 0, 1)));
-        assertTrue(isOne(net.apply(1, 1, 0)));
-        assertTrue(isOne(net.apply(1, 1, 1)));
+        assertTrue(isZero(net.apply(0, 0)));
+        assertTrue(isOne(net.apply(0, 1)));
+        assertTrue(isOne(net.apply(1, 0)));
+        assertTrue(isOne(net.apply(1, 1)));
     }
 
     @Test
     public void testNot() {
         SimpleMatrix w1 = new SimpleMatrix(1, 2, true, 5, -10);
         Network net = new Network(w1);
-        assertTrue(isOne(net.apply(1, 0)));
-        assertTrue(isZero(net.apply(1, 1)));
+        assertTrue(isOne(net.apply(0)));
+        assertTrue(isZero(net.apply(1)));
     }
 
     @Test
     public void testNand() {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, 15, -10, -10);
         Network net = new Network(w1);
-        assertTrue(isOne(net.apply(1, 0, 0)));
-        assertTrue(isOne(net.apply(1, 0, 1)));
-        assertTrue(isOne(net.apply(1, 1, 0)));
-        assertTrue(isZero(net.apply(1, 1, 1)));
+        assertTrue(isOne(net.apply(0, 0)));
+        assertTrue(isOne(net.apply(0, 1)));
+        assertTrue(isOne(net.apply(1, 0)));
+        assertTrue(isZero(net.apply(1, 1)));
     }
 
     @Test
@@ -87,10 +87,10 @@ public class NetworkTest {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
         SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
         Network net = new Network(w1, w2);
-        assertTrue(isOne(net.apply(1, 0, 0)));
-        assertTrue(isOne(net.apply(1, 0, 1)));
-        assertTrue(isOne(net.apply(1, 1, 0)));
-        assertTrue(isZero(net.apply(1, 1, 1)));
+        assertTrue(isOne(net.apply(0, 0)));
+        assertTrue(isOne(net.apply(0, 1)));
+        assertTrue(isOne(net.apply(1, 0)));
+        assertTrue(isZero(net.apply(1, 1)));
     }
 
     @Test
@@ -141,14 +141,14 @@ public class NetworkTest {
         Network net;
         SimpleMatrix output;
         net = new Network(Functions.IDENTITY, z2, z3);
-        output = net.apply(1, 1, 1, 1);
+        output = net.apply(1, 1, 1);
         assertEquals(2, output.numRows());
         assertEquals(1, output.numCols());
         assertEquals(557.0, output.get(0, 0), 0.00001);
         assertEquals(-1242.0, output.get(1, 0), 0.00001);
 
         net = new Network(Functions.SIGMOID, z2, z3);
-        output = net.apply(1, 1, 1, 1);
+        output = net.apply(1, 1, 1);
         assertEquals(2, output.numRows());
         assertEquals(1, output.numCols());
         assertEquals(1.0, output.get(0, 0), 0.00001);

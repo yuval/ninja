@@ -27,7 +27,6 @@ public class Network {
 
     public Network(SimpleMatrix ... w) {
         this(Functions.SIGMOID, w);
-
     }
 
     public Network(Function activationFunction, SimpleMatrix ... w) {
@@ -35,20 +34,23 @@ public class Network {
         this.w = w;
     }
 
+    private SimpleMatrix addBiasUnit(SimpleMatrix m) {
+        SimpleMatrix result = new SimpleMatrix(m.numRows() + 1, 1);
+        result.set(0, 0, 1.0);
+        for (int i = 0; i < m.numRows(); i++) {
+            result.set(i + 1, 0, m.get(i, 0));
+        }
+        return result;
+    }
+
     SimpleMatrix apply(double ... values) {
         int layers = w.length + 1;
         SimpleMatrix[] a = new SimpleMatrix[layers];
-        a[0] = new SimpleMatrix(values.length, 1, true, values);
+        a[0] = addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
         for (int l = 1; l < layers; l++) {
             a[l] = Functions.apply(activationFunction, w[l - 1].mult(a[l - 1]));
             if (l != layers - 1) {
-                // TODO: find better way to insert the bias!
-                SimpleMatrix tmp = new SimpleMatrix(a[l].numRows() + 1, 1);
-                tmp.set(0, 0, 1.0);
-                for (int i = 0; i < a[l].numRows(); i++) {
-                    tmp.set(i + 1, 0, a[l].get(i, 0));
-                }
-                a[l] = tmp;
+                a[l] = addBiasUnit(a[l]);
             }
         }
         return a[layers - 1];
