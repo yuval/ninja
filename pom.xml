@@ -11,6 +11,12 @@
      <compiler.fork>false</compiler.fork>
      <jdk.level>1.7</jdk.level>
      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+
+     <maven-checkstyle-plugin.version>2.13</maven-checkstyle-plugin.version>
+     <maven-pmd-plugin.version>3.1</maven-pmd-plugin.version>
+
+
   </properties>
   <modules>
      <module>core</module>
@@ -45,6 +51,59 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <profiles>
+    <profile>
+      <id>sourcecheck</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>${maven-checkstyle-plugin.version}</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-pmd-plugin</artifactId>
+            <version>${maven-pmd-plugin.version}</version>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>fastinstall</id>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+        <pmd.skip>true</pmd.skip>
+        <checkstyle.skip>true</checkstyle.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${maven-source-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>nochecks</id>
+      <properties>
+        <pmd.skip>true</pmd.skip>
+        <checkstyle.skip>true</checkstyle.skip>
+      </properties>
+    </profile>
+  </profiles>
   <build>
     <pluginManagement>
       <plugins>
@@ -61,6 +120,75 @@
               <configuration>
                 <outputFile>${project.build.directory}/classpath.txt</outputFile>
               </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${maven-checkstyle-plugin.version}</version>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <phase>validate</phase>
+              <configuration>
+                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                <includeTestResources>true</includeTestResources>
+                <configLocation>etc/checkstyle.xml</configLocation>
+                <encoding>UTF-8</encoding>
+                <logViolationsToConsole>true</logViolationsToConsole>
+                <failOnViolation>true</failOnViolation>
+                <linkXRef>false</linkXRef>
+              </configuration>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>${maven-pmd-plugin.version}</version>
+          <configuration>
+            <rules>
+	      <rule ref="rulesets/java/basic.xml/BooleanInstantiation"/>
+	      <rule ref="rulesets/java/basic.xml/DoubleCheckedLocking"/>
+	      <rule ref="rulesets/java/basic.xml/EmptyStatementNotInLoop"/>
+	      <rule ref="rulesets/java/basic.xml/ForLoopShouldBeWhileLoop"/>
+	      <rule ref="rulesets/java/basic.xml/JumbledIncrementer"/>
+	      <rule ref="rulesets/java/basic.xml/ReturnFromFinallyBlock"/>
+	      <rule ref="rulesets/java/basic.xml/UnnecessaryConversionTemporary"/>
+	      <rule ref="rulesets/java/basic.xml/UnnecessaryFinalModifier"/>
+	      <rule ref="rulesets/java/basic.xml/UnnecessaryReturn"/>
+	      <rule ref="rulesets/java/design.xml/AvoidProtectedFieldInFinalClass"/>
+	      <rule ref="rulesets/java/design.xml/ConstructorCallsOverridableMethod"/>
+	      <rule ref="rulesets/java/design.xml/IdempotentOperations"/>
+	      <rule ref="rulesets/java/design.xml/OptimizableToArrayCall"/>
+	      <rule ref="rulesets/java/design.xml/PositionLiteralsFirstInComparisons"/>
+	      <rule ref="rulesets/java/design.xml/SimplifyBooleanExpressions"/>
+	      <rule ref="rulesets/java/design.xml/SimplifyBooleanReturns"/>
+	      <rule ref="rulesets/java/design.xml/UnnecessaryLocalBeforeReturn"/>
+	      <rule ref="rulesets/java/logging-java.xml/LoggerIsNotStaticFinal"/>
+	      <rule ref="rulesets/java/unusedcode.xml/UnusedLocalVariable"/>
+	      <rule ref="rulesets/java/unusedcode.xml/UnusedPrivateField"/>
+	      <rule ref="rulesets/java/unusedcode.xml/UnusedPrivateMethod"/>
+            </rules>
+            <sourceEncoding>UTF-8</sourceEncoding>
+            <targetJdk>${bt.compile.source}</targetJdk>
+            <linkXRef>false</linkXRef>
+            <includeTests>true</includeTests>
+            <verbose>true</verbose>
+          </configuration>
+          <executions>
+            <execution>
+              <id>pmd</id>
+              <phase>pre-integration-test</phase>
+              <goals>
+                <!-- explicitly configure PMD goal so  that exclusions work right.. -->
+                <goal>pmd</goal>
+                <goal>check</goal>
+              </goals>
             </execution>
           </executions>
         </plugin>
