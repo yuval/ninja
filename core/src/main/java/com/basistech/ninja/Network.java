@@ -21,39 +21,36 @@ package com.basistech.ninja;
 
 import org.ejml.simple.SimpleMatrix;
 
-import java.util.List;
-
 public class Network {
+    private final SimpleMatrix[] w;
+    private final Function activationFunction;
 
-    private final SimpleMatrix inputWeights;
-    private final List<SimpleMatrix> hiddenWeights;
+    public Network(SimpleMatrix ... w) {
+        this(Functions.SIGMOID, w);
 
-    public Network(SimpleMatrix inputWeights, List<SimpleMatrix> hiddenWeights) {
-        this.inputWeights = inputWeights;
-        this.hiddenWeights = hiddenWeights;
     }
 
-    public SimpleMatrix feedForward(SimpleMatrix input) {
-        SimpleMatrix result = sigmoid(inputWeights.mult(input));
-        for (SimpleMatrix hidden : hiddenWeights) {
-            result = sigmoid(hidden.mult(result));
-        }
-        return result;
+    public Network(Function activationFunction, SimpleMatrix ... w) {
+        this.activationFunction = activationFunction;
+        this.w = w;
     }
 
-    private SimpleMatrix sigmoid(SimpleMatrix matrix) {
-        SimpleMatrix result = new SimpleMatrix(matrix.numRows(), matrix.numCols());
-        for(int i = 0; i < matrix.numRows(); i++){
-            for (int j = 0; j < matrix.numCols(); j++) {
-                result.set(i, j, sigmoid(matrix.get(i, j)));
+    SimpleMatrix apply(double ... values) {
+        int layers = w.length + 1;
+        SimpleMatrix[] a = new SimpleMatrix[layers];
+        a[0] = new SimpleMatrix(values.length, 1, true, values);
+        for (int l = 1; l < layers; l++) {
+            a[l] = Functions.apply(activationFunction, w[l - 1].mult(a[l - 1]));
+            if (l != layers - 1) {
+                // TODO: find better way to insert the bias!
+                SimpleMatrix tmp = new SimpleMatrix(a[l].numRows() + 1, 1);
+                tmp.set(0, 0, 1.0);
+                for (int i = 0; i < a[l].numRows(); i++) {
+                    tmp.set(i + 1, 0, a[l].get(i, 0));
+                }
+                a[l] = tmp;
             }
         }
-        return result;
+        return a[layers - 1];
     }
-
-    private double sigmoid(double val) {
-        return 1.0 / (1.0 + Math.exp(-1.0 * val));
-    }
-
-
 }
