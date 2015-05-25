@@ -86,9 +86,37 @@ public class FeedforwardNetTest {
 
     @Test
     public void testFullThreeLayer() {
-        // TODO: make bias implicit
-        // TODO: something better than insertBias
-        // TODO: maybe recursive or control how many applies
+        // >>> z2 = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
+        // >>> z2
+        // array([[ 1,  2,  3,  4],
+        //        [ 5,  6,  7,  8],
+        //        [ 9, 10, 11, 12],
+        //        [13, 14, 15, 16]])
+        //
+        // >>> z3 = np.array([[1,2,3,4,5],[-6,-7,-8,-9,-10]])
+        // >>> z3
+        // array([[  1,   2,   3,   4,   5],
+        //        [ -6,  -7,  -8,  -9, -10]])
+        //
+        // >>> x = np.array([[1],[1],[1],[1]])
+        // >>> x
+        // array([[1],
+        //        [1],
+        //        [1],
+        //        [1]])
+        //
+        // >>> a2 = np.vstack([1, np.dot(z2, x)])
+        // >>> a2
+        // array([[ 1],
+        //        [10],
+        //        [26],
+        //        [42],
+        //        [58]])
+        //
+        // >>> a3 = np.dot(z3, a2)
+        // >>> a3
+        // array([[  557],
+        //        [-1242]])
 
         Matrix z2 = new Matrix(4, 4,
                 1, 2, 3, 4,
