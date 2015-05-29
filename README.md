@@ -1,1 +1,1 @@
-# ninja
+# Neural Networks in Java (ninja)
