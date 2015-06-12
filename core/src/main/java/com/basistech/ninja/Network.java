@@ -82,7 +82,7 @@ public class Network {
         return w[layer].copy();
     }
 
-    public SimpleMatrix apply(double ... values) {
+    public SimpleMatrix[] feedForward(double ... values) {
         int layers = w.length + 1;
         SimpleMatrix[] a = new SimpleMatrix[layers];
         a[0] = addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
@@ -92,7 +92,12 @@ public class Network {
                 a[l] = addBiasUnit(a[l]);
             }
         }
-        return a[layers - 1];
+        return a;
+    }
+
+    public SimpleMatrix apply(double ... values) {
+        SimpleMatrix[] a =  feedForward(values);
+        return a[a.length - 1];
     }
 
     @Override
