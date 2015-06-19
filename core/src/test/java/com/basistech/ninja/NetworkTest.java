@@ -151,7 +151,7 @@ public class NetworkTest {
 
         // backprop to compute d for each layer (one d for every a)
         SimpleMatrix d3 = a3.minus(y);
-        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(addBiasUnit(z2));
+        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(sigmoidPrime(addBiasUnit(z2)));
         d2 = stripBiasUnit(d2);
 
         System.out.println(w2);
@@ -190,7 +190,7 @@ public class NetworkTest {
 
         // backprop to compute d for each layer (one d for every a)
         SimpleMatrix d3 = a3.minus(y);
-        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(addBiasUnit(z2));
+        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(sigmoidPrime(addBiasUnit(z2)));
         d2 = stripBiasUnit(d2);
 
         System.out.println(d3);
