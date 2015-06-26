@@ -105,34 +105,6 @@ public class NetworkTest {
         System.out.println(net.apply(1, 1).get(0, 0));
     }
 
-    private SimpleMatrix addBiasUnit(SimpleMatrix m) {
-        SimpleMatrix result = new SimpleMatrix(m.numRows() + 1, 1);
-        result.set(0, 0, 1.0);
-        for (int i = 0; i < m.numRows(); i++) {
-            result.set(i + 1, 0, m.get(i, 0));
-        }
-        return result;
-    }
-
-    private SimpleMatrix stripBiasUnit(SimpleMatrix m) {
-        SimpleMatrix result = new SimpleMatrix(m.numRows() - 1, 1);
-        for (int i = 0; i < result.numRows(); i++) {
-            result.set(i, 0, m.get(i + 1, 0));
-        }
-        return result;
-    }
-
-    private SimpleMatrix sigmoidPrime(SimpleMatrix m) {
-        SimpleMatrix ones = new SimpleMatrix(m.numRows(), m.numCols());
-        for (int i = 0; i < ones.numRows(); i++) {
-            for (int j = 0; j < ones.numCols(); j++) {
-                ones.set(i, j, 1);
-            }
-        }
-        SimpleMatrix sigmoid = Functions.apply(Functions.SIGMOID, m);
-        return sigmoid.elementMult(ones.minus(sigmoid));
-    }
-
     @Test
     public void testThreeLayerNandDeltas() {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
@@ -143,22 +115,26 @@ public class NetworkTest {
         SimpleMatrix y = new SimpleMatrix(1, 1, true, 1);
 
         // feedforward to compute z and a for each layer
-        SimpleMatrix a1 = addBiasUnit(x);
+        SimpleMatrix a1 = Network.addBiasUnit(x);
         SimpleMatrix z2 = w1.mult(a1);
-        SimpleMatrix a2 = addBiasUnit(Functions.apply(Functions.SIGMOID, z2));
+        SimpleMatrix a2 = Network.addBiasUnit(Functions.apply(Functions.SIGMOID, z2));
         SimpleMatrix z3 = w2.mult(a2);
         SimpleMatrix a3 = Functions.apply(Functions.SIGMOID, z3);
 
         // backprop to compute d for each layer (one d for every a)
         SimpleMatrix d3 = a3.minus(y);
-        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(sigmoidPrime(addBiasUnit(z2)));
-        d2 = stripBiasUnit(d2);
+        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(Functions.apply(
+                Functions.SIGMOID_PRIME, Network.addBiasUnit(z2)));
+        d2 = Network.stripBiasUnit(d2);
 
-        System.out.println(w2);
-        System.out.println(d3);
-        System.out.println(z2);
-        System.out.println(sigmoidPrime(z2));
-        System.out.println(d2);
+        assertEquals(-0.007, d3.get(0, 0), 0.001);
+        assertEquals(0.0, d2.get(0, 0), 0.001);
+
+        assertEquals(1, d3.numRows());
+        assertEquals(1, d3.numCols());
+        assertEquals(1, d2.numRows());
+        assertEquals(1, d2.numCols());
+
 
         // TODO: do for more examples?
     }
@@ -182,19 +158,29 @@ public class NetworkTest {
         SimpleMatrix y = new SimpleMatrix(2, 1, true, 0, 0);
 
         // feedforward to compute z and a for each layer
-        SimpleMatrix a1 = addBiasUnit(x);
+        SimpleMatrix a1 = Network.addBiasUnit(x);
         SimpleMatrix z2 = w1.mult(a1);
-        SimpleMatrix a2 = addBiasUnit(Functions.apply(Functions.SIGMOID, z2));
+        SimpleMatrix a2 = Network.addBiasUnit(Functions.apply(Functions.SIGMOID, z2));
         SimpleMatrix z3 = w2.mult(a2);
         SimpleMatrix a3 = Functions.apply(Functions.SIGMOID, z3);
 
         // backprop to compute d for each layer (one d for every a)
         SimpleMatrix d3 = a3.minus(y);
-        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(sigmoidPrime(addBiasUnit(z2)));
-        d2 = stripBiasUnit(d2);
+        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(Functions.apply(
+                Functions.SIGMOID_PRIME, Network.addBiasUnit(z2)));
+        d2 = Network.stripBiasUnit(d2);
 
-        System.out.println(d3);
-        System.out.println(d2);
+        assertEquals(1.0, d3.get(0, 0), 0.001);
+        assertEquals(0.0, d3.get(1, 0), 0.001);
+        assertEquals(0.393, d2.get(0, 0), 0.001);
+        assertEquals(0.02, d2.get(1, 0), 0.001);
+        assertEquals(0.0, d2.get(2, 0), 0.001);
+        assertEquals(0.0, d2.get(3, 0), 0.001);
+
+        assertEquals(2, d3.numRows());
+        assertEquals(1, d3.numCols());
+        assertEquals(4, d2.numRows());
+        assertEquals(1, d2.numCols());
     }
 
     @Test

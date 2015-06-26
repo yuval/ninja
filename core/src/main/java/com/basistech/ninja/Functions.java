@@ -24,6 +24,7 @@ import org.ejml.simple.SimpleMatrix;
 public final class Functions {
     static final Function IDENTITY = new Identity();
     static final Function SIGMOID = new Sigmoid();
+    static final Function SIGMOID_PRIME = new SigmoidPrime();
 
     private Functions() {
         // empty
@@ -41,6 +42,13 @@ public final class Functions {
         }
     }
 
+    private static class SigmoidPrime implements Function {
+        public double apply(double x) {
+            double sigmoid = SIGMOID.apply(x);
+            return sigmoid * (1.0 - sigmoid);
+        }
+    }
+
     public static SimpleMatrix apply(Function f, SimpleMatrix m) {
         SimpleMatrix result = new SimpleMatrix(m.numRows(), m.numCols());
         for (int i = 0; i < m.numRows(); i++) {
@@ -50,4 +58,5 @@ public final class Functions {
         }
         return result;
     }
+
 }

@@ -54,7 +54,15 @@ public class Network {
         w.toArray(this.w);
     }
 
-    private SimpleMatrix addBiasUnit(SimpleMatrix m) {
+    static SimpleMatrix stripBiasUnit(SimpleMatrix m) {
+        SimpleMatrix result = new SimpleMatrix(m.numRows() - 1, 1);
+        for (int i = 0; i < result.numRows(); i++) {
+            result.set(i, 0, m.get(i + 1, 0));
+        }
+        return result;
+    }
+
+    static SimpleMatrix addBiasUnit(SimpleMatrix m) {
         SimpleMatrix result = new SimpleMatrix(m.numRows() + 1, 1);
         result.set(0, 0, 1.0);
         for (int i = 0; i < m.numRows(); i++) {
