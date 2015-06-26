@@ -90,6 +90,10 @@ public class Network {
         return w[layer].copy();
     }
 
+    public SimpleMatrix[] feedForward(SimpleMatrix m) {
+        return feedForward(m.getMatrix().getData());
+    }
+
     public SimpleMatrix[] feedForward(double ... values) {
         int layers = w.length + 1;
         SimpleMatrix[] a = new SimpleMatrix[layers];
@@ -106,6 +110,23 @@ public class Network {
     public SimpleMatrix apply(double ... values) {
         SimpleMatrix[] a =  feedForward(values);
         return a[a.length - 1];
+    }
+
+    // TODO: z instead of activations and configurable cost function
+    // TODO: strip bias
+    public SimpleMatrix[] backprop(SimpleMatrix x, SimpleMatrix y) {
+        SimpleMatrix[] activations  = feedForward(x);
+        SimpleMatrix[] deltas = new SimpleMatrix[getNumLayers() - 1];
+        for (int l = deltas.length - 1; l >= 0; l--) {
+            if (l == deltas.length - 1) {
+                // delta "L"
+                deltas[l] = activations[l + 1].minus(y);
+            } else {
+                deltas[l] = w[l + 1].transpose().mult(deltas[l + 1]).elementMult(
+                        Functions.apply(Functions.SIGMOID_PRIME, activations[l + 1]));
+            }
+        }
+        return deltas;
     }
 
     @Override

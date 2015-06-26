@@ -109,7 +109,7 @@ public class NetworkTest {
     public void testThreeLayerNandDeltas() {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
         SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
-        //Network net = new Network(w1, w2);
+        #Network net = new Network(w1, w2);
 
         SimpleMatrix x = new SimpleMatrix(2, 1, true, 0, 0);
         SimpleMatrix y = new SimpleMatrix(1, 1, true, 1);
