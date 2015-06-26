@@ -96,20 +96,23 @@ public class Network {
 
     public SimpleMatrix[] feedForward(double ... values) {
         int layers = w.length + 1;
+        SimpleMatrix[] z = new SimpleMatrix[layers];
         SimpleMatrix[] a = new SimpleMatrix[layers];
-        a[0] = addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
+        z[0] = addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
+        a[0] = z[0];
         for (int l = 1; l < layers; l++) {
-            a[l] = Functions.apply(activationFunction, w[l - 1].mult(a[l - 1]));
+            z[l] = w[l - 1].mult(a[l - 1]);
+            a[l] = Functions.apply(activationFunction, z[l]);
             if (l != layers - 1) {
                 a[l] = addBiasUnit(a[l]);
             }
         }
-        return a;
+        return z;
     }
 
     public SimpleMatrix apply(double ... values) {
-        SimpleMatrix[] a =  feedForward(values);
-        return a[a.length - 1];
+        SimpleMatrix[] z =  feedForward(values);
+        return Functions.apply(activationFunction, z[z.length - 1]);
     }
 
     // TODO: z instead of activations and configurable cost function
