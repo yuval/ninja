@@ -104,6 +104,7 @@ public class Network {
             z[l] = w[l - 1].mult(a[l - 1]);
             a[l] = Functions.apply(activationFunction, z[l]);
             if (l != layers - 1) {
+                z[l] = addBiasUnit(z[l]);
                 a[l] = addBiasUnit(a[l]);
             }
         }
@@ -115,18 +116,19 @@ public class Network {
         return Functions.apply(activationFunction, z[z.length - 1]);
     }
 
-    // TODO: z instead of activations and configurable cost function
+    // TODO: parameterizable cost function
     // TODO: strip bias
     public SimpleMatrix[] backprop(SimpleMatrix x, SimpleMatrix y) {
-        SimpleMatrix[] activations  = feedForward(x);
+        SimpleMatrix[] zVectors  = feedForward(x);
         SimpleMatrix[] deltas = new SimpleMatrix[getNumLayers() - 1];
         for (int l = deltas.length - 1; l >= 0; l--) {
             if (l == deltas.length - 1) {
                 // delta "L"
-                deltas[l] = activations[l + 1].minus(y);
+                SimpleMatrix a = Functions.apply(activationFunction, zVectors[l + 1]);
+                deltas[l] = a.minus(y);
             } else {
                 deltas[l] = w[l + 1].transpose().mult(deltas[l + 1]).elementMult(
-                        Functions.apply(Functions.SIGMOID_PRIME, activations[l + 1]));
+                        Functions.apply(Functions.SIGMOID_PRIME, zVectors[l + 1]));
             }
         }
         return deltas;
