@@ -98,51 +98,30 @@ public class NetworkTest {
         assertTrue(isOne(net.apply(0, 1)));
         assertTrue(isOne(net.apply(1, 0)));
         assertTrue(isZero(net.apply(1, 1)));
-
-        System.out.println(net.apply(0, 0).get(0, 0));
-        System.out.println(net.apply(0, 1).get(0, 0));
-        System.out.println(net.apply(1, 0).get(0, 0));
-        System.out.println(net.apply(1, 1).get(0, 0));
     }
 
     @Test
     public void testThreeLayerNandDeltas() {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
         SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
-        //Network net = new Network(w1, w2);
 
         SimpleMatrix x = new SimpleMatrix(2, 1, true, 0, 0);
         SimpleMatrix y = new SimpleMatrix(1, 1, true, 1);
 
-        // feedforward to compute z and a for each layer
-        SimpleMatrix a1 = Network.addBiasUnit(x);
-        SimpleMatrix z2 = w1.mult(a1);
-        SimpleMatrix a2 = Network.addBiasUnit(Functions.apply(Functions.SIGMOID, z2));
-        SimpleMatrix z3 = w2.mult(a2);
-        SimpleMatrix a3 = Functions.apply(Functions.SIGMOID, z3);
-
-        // backprop to compute d for each layer (one d for every a)
-        SimpleMatrix d3 = a3.minus(y);
-        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(Functions.apply(
-                Functions.SIGMOID_PRIME, Network.addBiasUnit(z2)));
-        //d2 = Network.stripBiasUnit(d2);
-
         Network net = new Network(w1, w2);
-        SimpleMatrix[] actualDeltas = net.backprop(x, y);
+        SimpleMatrix[] d = net.backprop(x, y);
 
-        assertEquals(d3.get(0, 0), actualDeltas[1].get(0, 0) , 0.001);
-        assertEquals(d2.get(0, 0), actualDeltas[0].get(0, 0) , 0.001);
+        SimpleMatrix d3 = d[1];
+        assertEquals(1, d3.numRows());
+        assertEquals(1, d3.numCols());
+        assertEquals(-0.007, d3.get(0, 0) , 0.001);
 
-        assertEquals(d3.numRows(), actualDeltas[1].numRows());
-        assertEquals(d3.numCols(), actualDeltas[1].numCols());
-        assertEquals(d2.numRows(), actualDeltas[0].numRows());
-        assertEquals(d2.numCols(), actualDeltas[0].numCols());
-
-
-        // TODO: do for more examples?
+        SimpleMatrix d2 = d[0];
+        assertEquals(1, d2.numRows());
+        assertEquals(1, d2.numCols());
+        assertEquals(0.0, d2.get(0, 0), 0.001);
     }
 
-    // TODO: start with w2 (like Neilsen) or w1 like (Ng)?
     @Test
     public void testFullthreeLayerDeltas() {
         SimpleMatrix w1 = new SimpleMatrix(4, 4, true,
@@ -159,33 +138,22 @@ public class NetworkTest {
         SimpleMatrix x = new SimpleMatrix(3, 1, true, 0, 0, 0);
         SimpleMatrix y = new SimpleMatrix(2, 1, true, 0, 0);
 
-        // feedforward to compute z and a for each layer
-        SimpleMatrix a1 = Network.addBiasUnit(x);
-        SimpleMatrix z2 = w1.mult(a1);
-        SimpleMatrix a2 = Network.addBiasUnit(Functions.apply(Functions.SIGMOID, z2));
-        SimpleMatrix z3 = w2.mult(a2);
-        SimpleMatrix a3 = Functions.apply(Functions.SIGMOID, z3);
-
-        // backprop to compute d for each layer (one d for every a)
-        SimpleMatrix d3 = a3.minus(y);
-        SimpleMatrix d2 = w2.transpose().mult(d3).elementMult(Functions.apply(
-                Functions.SIGMOID_PRIME, Network.addBiasUnit(z2)));
-        //d2 = Network.stripBiasUnit(d2);
-
         Network net = new Network(w1, w2);
-        SimpleMatrix[] actualDeltas = net.backprop(x, y);
+        SimpleMatrix[] d = net.backprop(x, y);
 
-        assertEquals(d3.get(0, 0), actualDeltas[1].get(0, 0), 0.001);
-        assertEquals(d3.get(1, 0), actualDeltas[1].get(1, 0), 0.001);
-        assertEquals(d2.get(0, 0), actualDeltas[0].get(0, 0), 0.001);
-        assertEquals(d2.get(1, 0), actualDeltas[0].get(1, 0), 0.001);
-        assertEquals(d2.get(2, 0), actualDeltas[0].get(2, 0), 0.001);
-        assertEquals(d2.get(3, 0), actualDeltas[0].get(3, 0), 0.001);
+        SimpleMatrix d3 = d[1];
+        assertEquals(2, d3.numRows());
+        assertEquals(1, d3.numCols());
+        assertEquals(1.0, d3.get(0, 0), 0.001);
+        assertEquals(0.0, d3.get(1, 0), 0.001);
 
-        assertEquals(d3.numRows(), actualDeltas[1].numRows());
-        assertEquals(d3.numCols(), actualDeltas[1].numCols());
-        assertEquals(d2.numRows(), actualDeltas[0].numRows());
-        assertEquals(d2.numCols(), actualDeltas[0].numCols());
+        SimpleMatrix d2 = d[0];
+        assertEquals(4, d2.numRows());
+        assertEquals(1, d2.numCols());
+        assertEquals(0.393, d2.get(0, 0), 0.001);
+        assertEquals(0.02, d2.get(1, 0), 0.001);
+        assertEquals(0.0, d2.get(2, 0), 0.001);
+        assertEquals(0.0, d2.get(3, 0), 0.001);
     }
 
     @Test

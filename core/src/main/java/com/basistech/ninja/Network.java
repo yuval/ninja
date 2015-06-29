@@ -98,14 +98,14 @@ public class Network {
         int layers = w.length + 1;
         SimpleMatrix[] z = new SimpleMatrix[layers];
         SimpleMatrix[] a = new SimpleMatrix[layers];
-        z[0] = addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
+        z[0] = Network.addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
         a[0] = z[0];
         for (int l = 1; l < layers; l++) {
             z[l] = w[l - 1].mult(a[l - 1]);
             a[l] = Functions.apply(activationFunction, z[l]);
             if (l != layers - 1) {
-                z[l] = addBiasUnit(z[l]);
-                a[l] = addBiasUnit(a[l]);
+                z[l] = Network.addBiasUnit(z[l]);
+                a[l] = Network.addBiasUnit(a[l]);
             }
         }
         return z;
@@ -117,7 +117,6 @@ public class Network {
     }
 
     // TODO: parameterizable cost function
-    // TODO: strip bias
     public SimpleMatrix[] backprop(SimpleMatrix x, SimpleMatrix y) {
         SimpleMatrix[] zVectors  = feedForward(x);
         SimpleMatrix[] deltas = new SimpleMatrix[getNumLayers() - 1];
@@ -129,6 +128,7 @@ public class Network {
             } else {
                 deltas[l] = w[l + 1].transpose().mult(deltas[l + 1]).elementMult(
                         Functions.apply(Functions.SIGMOID_PRIME, zVectors[l + 1]));
+                deltas[l] = Network.stripBiasUnit(deltas[l]);
             }
         }
         return deltas;
