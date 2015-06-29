@@ -54,7 +54,15 @@ public class Network {
         w.toArray(this.w);
     }
 
-    private SimpleMatrix addBiasUnit(SimpleMatrix m) {
+    static SimpleMatrix stripBiasUnit(SimpleMatrix m) {
+        SimpleMatrix result = new SimpleMatrix(m.numRows() - 1, 1);
+        for (int i = 0; i < result.numRows(); i++) {
+            result.set(i, 0, m.get(i + 1, 0));
+        }
+        return result;
+    }
+
+    static SimpleMatrix addBiasUnit(SimpleMatrix m) {
         SimpleMatrix result = new SimpleMatrix(m.numRows() + 1, 1);
         result.set(0, 0, 1.0);
         for (int i = 0; i < m.numRows(); i++) {
@@ -82,17 +90,48 @@ public class Network {
         return w[layer].copy();
     }
 
-    public SimpleMatrix apply(double ... values) {
+    public SimpleMatrix[] feedForward(SimpleMatrix m) {
+        return feedForward(m.getMatrix().getData());
+    }
+
+    public SimpleMatrix[] feedForward(double ... values) {
         int layers = w.length + 1;
+        SimpleMatrix[] z = new SimpleMatrix[layers];
         SimpleMatrix[] a = new SimpleMatrix[layers];
-        a[0] = addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
+        z[0] = addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
+        a[0] = z[0];
         for (int l = 1; l < layers; l++) {
-            a[l] = Functions.apply(activationFunction, w[l - 1].mult(a[l - 1]));
+            z[l] = w[l - 1].mult(a[l - 1]);
+            a[l] = Functions.apply(activationFunction, z[l]);
             if (l != layers - 1) {
+                z[l] = addBiasUnit(z[l]);
                 a[l] = addBiasUnit(a[l]);
             }
         }
-        return a[layers - 1];
+        return z;
+    }
+
+    public SimpleMatrix apply(double ... values) {
+        SimpleMatrix[] z =  feedForward(values);
+        return Functions.apply(activationFunction, z[z.length - 1]);
+    }
+
+    // TODO: parameterizable cost function
+    // TODO: strip bias
+    public SimpleMatrix[] backprop(SimpleMatrix x, SimpleMatrix y) {
+        SimpleMatrix[] zVectors  = feedForward(x);
+        SimpleMatrix[] deltas = new SimpleMatrix[getNumLayers() - 1];
+        for (int l = deltas.length - 1; l >= 0; l--) {
+            if (l == deltas.length - 1) {
+                // delta "L"
+                SimpleMatrix a = Functions.apply(activationFunction, zVectors[l + 1]);
+                deltas[l] = a.minus(y);
+            } else {
+                deltas[l] = w[l + 1].transpose().mult(deltas[l + 1]).elementMult(
+                        Functions.apply(Functions.SIGMOID_PRIME, zVectors[l + 1]));
+            }
+        }
+        return deltas;
     }
 
     @Override
