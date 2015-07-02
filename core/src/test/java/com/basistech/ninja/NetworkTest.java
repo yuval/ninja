@@ -254,4 +254,30 @@ public class NetworkTest {
         assertTrue(w1.isIdentical(net.getWeightMatrix(0), 0.00001));
         assertTrue(w2.isIdentical(net.getWeightMatrix(1), 0.00001));
     }
+
+    @Test
+    public void testRandomInitialize() {
+        SimpleMatrix w1 = new SimpleMatrix(25, 401);
+        SimpleMatrix w2 = new SimpleMatrix(10, 26);
+        Network net = new Network(w1, w2);
+        net.randomInitialize();
+
+        double epsilon = Math.sqrt(6) / Math.sqrt(400 + 25);
+        SimpleMatrix m = net.getWeightMatrix(0);
+        for (int i = 0; i < m.numRows(); i++) {
+            for (int j = 0; j < m.numCols(); j++) {
+                double weight = m.get(i, j);
+                assertTrue(-epsilon <= weight && weight <= epsilon);
+            }
+        }
+
+        epsilon = Math.sqrt(6) / Math.sqrt(25 + 10);
+        m = net.getWeightMatrix(1);
+        for (int i = 0; i < m.numRows(); i++) {
+            for (int j = 0; j < m.numCols(); j++) {
+                double weight = m.get(i, j);
+                assertTrue(-epsilon <= weight && weight <= epsilon);
+            }
+        }
+    }
 }

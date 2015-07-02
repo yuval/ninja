@@ -30,8 +30,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.List;
+import java.util.Random;
 
 public class Network {
+    private static final Random RANDOM = new Random(8723643324L);
     private final SimpleMatrix[] w;
     private final Function activationFunction;
 
@@ -69,6 +71,27 @@ public class Network {
             result.set(i + 1, 0, m.get(i, 0));
         }
         return result;
+    }
+
+    private void randomInitializeLayer(int layer) {
+        int inputSize = getNumNeurons(layer);
+        int outputSize = getNumNeurons(layer + 1);
+        double epsilon = Math.sqrt(6) / Math.sqrt(inputSize + outputSize);
+        // TODO: why does Ng keep epsilon fixed for different layers?
+        // TODO: Nielsen uses something different, and parameterizes the init function
+        for (int i = 0; i < w[layer].numRows(); i++) {
+            for (int j = 0; j < w[layer].numCols(); j++) {
+                double value = RANDOM.nextDouble() * 2 * epsilon - epsilon;
+                w[layer].set(i, j, value);
+            }
+        }
+    }
+
+    // TODO: think of a way to initialize during construction
+    public void randomInitialize() {
+        for (int l = 0; l < getNumLayers() - 1; l++) {
+            randomInitializeLayer(l);
+        }
     }
 
     public int getNumLayers() {
