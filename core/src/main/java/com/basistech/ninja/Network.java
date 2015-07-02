@@ -130,8 +130,7 @@ public class Network {
     }
 
     // TODO: parameterizable cost function
-    public SimpleMatrix[] backprop(SimpleMatrix x, SimpleMatrix y) {
-        SimpleMatrix[] zVectors  = feedForward(x);
+    public SimpleMatrix[] backprop(SimpleMatrix[] zVectors, SimpleMatrix y) {
         SimpleMatrix[] deltas = new SimpleMatrix[getNumLayers() - 1];
         for (int l = deltas.length - 1; l >= 0; l--) {
             if (l == deltas.length - 1) {
@@ -145,6 +144,53 @@ public class Network {
             }
         }
         return deltas;
+    }
+
+    public void batchGD(SimpleMatrix x, SimpleMatrix y, int maxEpochs, double epsilon) {
+        if (x.numRows() != y.numRows()) {
+            throw new RuntimeException("x and y must have the same number of rows!");
+        }
+
+        for (int i = 0; i < maxEpochs; i++) {
+            SimpleMatrix[] bigD = epoch(x, y);
+            for (int j = 0; j < w.length; j++) {
+                // scale is like mult(double)
+                w[j] = w[j].minus(bigD[j].scale(epsilon));
+            }
+        }
+    }
+
+    private SimpleMatrix[] epoch(SimpleMatrix x, SimpleMatrix y) {
+        int numExamples = x.numRows();
+
+        SimpleMatrix[] bigDeltas = new SimpleMatrix[getNumLayers() - 1];
+        for (int l = 0; l < getNumLayers() - 1; l++) {
+            bigDeltas[l] = new SimpleMatrix(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
+        }
+
+        for (int i = 0; i < numExamples; i++) {
+            SimpleMatrix[] zVectors  = feedForward(x.extractVector(true, i));
+            SimpleMatrix[] deltas = backprop(zVectors, y.extractVector(true, i));
+            for (int l = 0; l < bigDeltas.length; l++) {
+                System.out.println("l: " + l);
+                SimpleMatrix a = Functions.apply(Functions.SIGMOID, zVectors[l + 1]);
+                System.out.println("w: " + w[l]);
+                System.out.println("a: " + a);
+                System.out.println("d: " + deltas[l]);
+                System.out.println("before: " + deltas[l].mult(a.transpose()));
+                SimpleMatrix foo = Network.addBiasUnit(deltas[l].mult(a.transpose()));
+                System.out.println("after: " + foo);
+                System.out.println("bidDelta: " + bigDeltas[l]);
+                bigDeltas[l] = bigDeltas[l].plus(foo);
+            }
+        }
+
+        SimpleMatrix[] bigD = new SimpleMatrix[bigDeltas.length];
+        for (int i = 0; i < bigDeltas.length; i++) {
+            bigD[i] = bigDeltas[i].divide(numExamples);
+        }
+
+        return bigD;
     }
 
     @Override

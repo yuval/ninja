@@ -109,7 +109,8 @@ public class NetworkTest {
         SimpleMatrix y = new SimpleMatrix(1, 1, true, 1);
 
         Network net = new Network(w1, w2);
-        SimpleMatrix[] d = net.backprop(x, y);
+        SimpleMatrix[] z = net.feedForward(x);
+        SimpleMatrix[] d = net.backprop(z, y);
 
         SimpleMatrix d3 = d[1];
         assertEquals(1, d3.numRows());
@@ -139,7 +140,8 @@ public class NetworkTest {
         SimpleMatrix y = new SimpleMatrix(2, 1, true, 0, 0);
 
         Network net = new Network(w1, w2);
-        SimpleMatrix[] d = net.backprop(x, y);
+        SimpleMatrix[] z = net.feedForward(x);
+        SimpleMatrix[] d = net.backprop(z, y);
 
         SimpleMatrix d3 = d[1];
         assertEquals(2, d3.numRows());
@@ -270,5 +272,20 @@ public class NetworkTest {
                 assertTrue(-epsilon <= weight && weight <= epsilon);
             }
         }
+    }
+
+    @Test
+    public void testBatchGD() {
+        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
+        SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
+        Network net = new Network(w1, w2);
+        net.randomInitialize();
+
+        SimpleMatrix x = new SimpleMatrix(1, 2, true, 0, 0);
+        SimpleMatrix y = new SimpleMatrix(1, 1, true, 1);
+
+        int epochs = 1;
+        double epsilon = 0.01;
+        net.batchGD(x, y, epochs, epsilon);
     }
 }
