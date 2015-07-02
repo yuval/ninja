@@ -35,23 +35,13 @@ import java.util.Random;
 public class Network {
     private static final Random RANDOM = new Random(8723643324L);
     private final SimpleMatrix[] w;
-    private final Function activationFunction;
+    private final Function activationFunction = Functions.SIGMOID;
 
     public Network(SimpleMatrix ... w) {
-        this(Functions.SIGMOID, w);
-    }
-
-    public Network(List<SimpleMatrix> w) {
-        this(Functions.SIGMOID, w);
-    }
-
-    public Network(Function activationFunction, SimpleMatrix ... w) {
-        this.activationFunction = activationFunction;
         this.w = w;
     }
 
-    public Network(Function activationFunction, List<SimpleMatrix> w) {
-        this.activationFunction = activationFunction;
+    public Network(List<SimpleMatrix> w) {
         this.w = new SimpleMatrix[w.size()];
         w.toArray(this.w);
     }

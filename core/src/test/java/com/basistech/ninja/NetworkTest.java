@@ -201,17 +201,8 @@ public class NetworkTest {
                 -6, -7, -8, -9, -10
         );
 
-        Network net;
-        SimpleMatrix output;
-        net = new Network(Functions.IDENTITY, w2, w3);
-        output = net.apply(1, 1, 1);
-        assertEquals(2, output.numRows());
-        assertEquals(1, output.numCols());
-        assertEquals(557.0, output.get(0, 0), 0.00001);
-        assertEquals(-1242.0, output.get(1, 0), 0.00001);
-
-        net = new Network(Functions.SIGMOID, w2, w3);
-        output = net.apply(1, 1, 1);
+        Network net = new Network(w2, w3);
+        SimpleMatrix output = net.apply(1, 1, 1);
         assertEquals(2, output.numRows());
         assertEquals(1, output.numCols());
         assertEquals(1.0, output.get(0, 0), 0.00001);
