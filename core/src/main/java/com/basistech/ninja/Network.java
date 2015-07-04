@@ -46,6 +46,10 @@ public class Network {
         w.toArray(this.w);
     }
 
+    static String getDimensions(SimpleMatrix m) {
+        return m.numRows() + " x " + m.numCols();
+    }
+
     static SimpleMatrix stripBiasUnit(SimpleMatrix m) {
         SimpleMatrix result = new SimpleMatrix(m.numRows() - 1, 1);
         for (int i = 0; i < result.numRows(); i++) {
@@ -55,6 +59,9 @@ public class Network {
     }
 
     static SimpleMatrix addBiasUnit(SimpleMatrix m) {
+        if (m.numCols() != 1) {
+            throw new IllegalArgumentException("Expected column vector, got " + Network.getDimensions(m));
+        }
         SimpleMatrix result = new SimpleMatrix(m.numRows() + 1, 1);
         result.set(0, 0, 1.0);
         for (int i = 0; i < m.numRows(); i++) {
@@ -103,94 +110,90 @@ public class Network {
         return w[layer].copy();
     }
 
-    public SimpleMatrix[] feedForward(SimpleMatrix m) {
+    public ForwardVectors feedForward(SimpleMatrix m) {
         return feedForward(m.getMatrix().getData());
     }
 
-    public SimpleMatrix[] feedForward(double ... values) {
+    public static class ForwardVectors {
+        SimpleMatrix[] z;
+        SimpleMatrix[] a;
+        ForwardVectors(SimpleMatrix[] z, SimpleMatrix[] a) {
+            this.z = z;
+            this.a = a;
+        }
+    }
+
+    // z[0] is always null
+    public ForwardVectors feedForward(double ... values) {
         int layers = w.length + 1;
         SimpleMatrix[] z = new SimpleMatrix[layers];
         SimpleMatrix[] a = new SimpleMatrix[layers];
-        z[0] = Network.addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
-        a[0] = z[0];
+        a[0] = Network.addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
         for (int l = 1; l < layers; l++) {
             z[l] = w[l - 1].mult(a[l - 1]);
             a[l] = Functions.apply(activationFunction, z[l]);
             if (l != layers - 1) {
-                z[l] = Network.addBiasUnit(z[l]);
                 a[l] = Network.addBiasUnit(a[l]);
             }
         }
-        return z;
+        return new ForwardVectors(z, a);
     }
 
     public SimpleMatrix apply(double ... values) {
-        SimpleMatrix[] z =  feedForward(values);
-        return Functions.apply(activationFunction, z[z.length - 1]);
+        return feedForward(values).a[getNumLayers() - 1];
     }
 
-    // TODO: parameterizable cost function
-    public SimpleMatrix[] backprop(SimpleMatrix[] zVectors, SimpleMatrix y) {
-        SimpleMatrix[] deltas = new SimpleMatrix[getNumLayers() - 1];
-        for (int l = deltas.length - 1; l >= 0; l--) {
-            if (l == deltas.length - 1) {
-                // delta "L"
-                SimpleMatrix a = Functions.apply(activationFunction, zVectors[l + 1]);
-                deltas[l] = a.minus(y);
-            } else {
-                deltas[l] = w[l + 1].transpose().mult(deltas[l + 1]).elementMult(
-                        Functions.apply(Functions.SIGMOID_PRIME, zVectors[l + 1]));
-                deltas[l] = Network.stripBiasUnit(deltas[l]);
-            }
+    // deltas[0] is always null
+    public SimpleMatrix[] backprop(ForwardVectors fv, SimpleMatrix y) {
+        int layers = getNumLayers();
+        SimpleMatrix[] deltas = new SimpleMatrix[layers];  // just don't use slot 0
+        deltas[layers - 1] = fv.a[layers - 1].minus(y);
+        for (int l = deltas.length - 2; l >= 1; l--) {
+            deltas[l] = w[l].transpose().mult(deltas[l + 1]).elementMult(
+                Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
+            deltas[l] = Network.stripBiasUnit(deltas[l]);
         }
         return deltas;
     }
 
     public void batchGD(SimpleMatrix x, SimpleMatrix y, int maxEpochs, double epsilon) {
         if (x.numRows() != y.numRows()) {
-            throw new RuntimeException("x and y must have the same number of rows!");
+            throw new IllegalArgumentException("x and y must have the same number of rows!");
         }
 
+        // TODO: stop before maxEpochs if we found minimum
+        // TODO: gradient checking
         for (int i = 0; i < maxEpochs; i++) {
-            SimpleMatrix[] bigD = epoch(x, y);
+            SimpleMatrix[] grad = epoch(x, y);
             for (int j = 0; j < w.length; j++) {
-                // scale is like mult(double)
-                w[j] = w[j].minus(bigD[j].scale(epsilon));
+                w[j] = w[j].minus(grad[j].scale(epsilon));
             }
         }
     }
 
-    private SimpleMatrix[] epoch(SimpleMatrix x, SimpleMatrix y) {
+    SimpleMatrix[] epoch(SimpleMatrix x, SimpleMatrix y) {
         int numExamples = x.numRows();
 
-        SimpleMatrix[] bigDeltas = new SimpleMatrix[getNumLayers() - 1];
+        SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
         for (int l = 0; l < getNumLayers() - 1; l++) {
-            bigDeltas[l] = new SimpleMatrix(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
+            bigDelta[l] = new SimpleMatrix(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
         }
 
         for (int i = 0; i < numExamples; i++) {
-            SimpleMatrix[] zVectors  = feedForward(x.extractVector(true, i));
-            SimpleMatrix[] deltas = backprop(zVectors, y.extractVector(true, i));
-            for (int l = 0; l < bigDeltas.length; l++) {
-                System.out.println("l: " + l);
-                SimpleMatrix a = Functions.apply(Functions.SIGMOID, zVectors[l + 1]);
-                System.out.println("w: " + w[l]);
-                System.out.println("a: " + a);
-                System.out.println("d: " + deltas[l]);
-                System.out.println("before: " + deltas[l].mult(a.transpose()));
-                SimpleMatrix foo = Network.addBiasUnit(deltas[l].mult(a.transpose()));
-                System.out.println("after: " + foo);
-                System.out.println("bidDelta: " + bigDeltas[l]);
-                bigDeltas[l] = bigDeltas[l].plus(foo);
+            SimpleMatrix xi = x.extractVector(true, i).transpose();
+            SimpleMatrix yi = y.extractVector(true, i).transpose();
+            ForwardVectors fv = feedForward(xi);
+            SimpleMatrix[] deltas = backprop(fv, yi);
+            for (int l = 0; l < bigDelta.length; l++) {
+                bigDelta[l] = bigDelta[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
             }
         }
 
-        SimpleMatrix[] bigD = new SimpleMatrix[bigDeltas.length];
-        for (int i = 0; i < bigDeltas.length; i++) {
-            bigD[i] = bigDeltas[i].divide(numExamples);
+        SimpleMatrix[] grad = new SimpleMatrix[getNumLayers() - 1];
+        for (int i = 0; i < getNumLayers() - 1; i++) {
+            grad[i] = bigDelta[i].divide(numExamples);
         }
-
-        return bigD;
+        return grad;
     }
 
     @Override
