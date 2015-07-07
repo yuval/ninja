@@ -109,14 +109,14 @@ public class NetworkTest {
         SimpleMatrix y = new SimpleMatrix(1, 1, true, 1);
 
         Network net = new Network(w1, w2);
-        SimpleMatrix[] d = net.backprop(x, y);
+        SimpleMatrix[] d = net.backprop(net.feedForward(x), y);
 
-        SimpleMatrix d3 = d[1];
+        SimpleMatrix d3 = d[2];
         assertEquals(1, d3.numRows());
         assertEquals(1, d3.numCols());
         assertEquals(-0.007, d3.get(0, 0) , 0.001);
 
-        SimpleMatrix d2 = d[0];
+        SimpleMatrix d2 = d[1];
         assertEquals(1, d2.numRows());
         assertEquals(1, d2.numCols());
         assertEquals(0.0, d2.get(0, 0), 0.001);
@@ -139,15 +139,15 @@ public class NetworkTest {
         SimpleMatrix y = new SimpleMatrix(2, 1, true, 0, 0);
 
         Network net = new Network(w1, w2);
-        SimpleMatrix[] d = net.backprop(x, y);
+        SimpleMatrix[] d = net.backprop(net.feedForward(x), y);
 
-        SimpleMatrix d3 = d[1];
+        SimpleMatrix d3 = d[2];
         assertEquals(2, d3.numRows());
         assertEquals(1, d3.numCols());
         assertEquals(1.0, d3.get(0, 0), 0.001);
         assertEquals(0.0, d3.get(1, 0), 0.001);
 
-        SimpleMatrix d2 = d[0];
+        SimpleMatrix d2 = d[1];
         assertEquals(4, d2.numRows());
         assertEquals(1, d2.numCols());
         assertEquals(0.393, d2.get(0, 0), 0.001);
@@ -201,17 +201,8 @@ public class NetworkTest {
                 -6, -7, -8, -9, -10
         );
 
-        Network net;
-        SimpleMatrix output;
-        net = new Network(Functions.IDENTITY, w2, w3);
-        output = net.apply(1, 1, 1);
-        assertEquals(2, output.numRows());
-        assertEquals(1, output.numCols());
-        assertEquals(557.0, output.get(0, 0), 0.00001);
-        assertEquals(-1242.0, output.get(1, 0), 0.00001);
-
-        net = new Network(Functions.SIGMOID, w2, w3);
-        output = net.apply(1, 1, 1);
+        Network net = new Network(w2, w3);
+        SimpleMatrix output = net.apply(1, 1, 1);
         assertEquals(2, output.numRows());
         assertEquals(1, output.numCols());
         assertEquals(1.0, output.get(0, 0), 0.00001);
@@ -279,5 +270,35 @@ public class NetworkTest {
                 assertTrue(-epsilon <= weight && weight <= epsilon);
             }
         }
+    }
+
+    @Test
+    public void testBatchGD() {
+        SimpleMatrix w1 = new SimpleMatrix(1, 3);
+        SimpleMatrix w2 = new SimpleMatrix(1, 2);
+        Network net = new Network(w1, w2);
+        net.randomInitialize();
+
+        // NAND:
+        // 0 0 --> 1
+        // 0 1 --> 1
+        // 1 0 --> 1
+        // 1 1 --> 0
+        SimpleMatrix x = new SimpleMatrix(4, 2, true, 0, 0, 0, 1, 1, 0, 1, 1);
+        SimpleMatrix y = new SimpleMatrix(4, 1, true, 1, 1, 1, 0);
+
+        int epochs = 100000;
+        double epsilon = 0.01;
+        net.batchGD(x, y, epochs, epsilon);
+
+        System.out.println(net.apply(0, 0));
+        System.out.println(net.apply(0, 1));
+        System.out.println(net.apply(1, 0));
+        System.out.println(net.apply(1, 1));
+
+        assertTrue(isOne(net.apply(0, 0)));
+        assertTrue(isOne(net.apply(0, 1)));
+        assertTrue(isOne(net.apply(1, 0)));
+        assertTrue(isZero(net.apply(1, 1)));
     }
 }
