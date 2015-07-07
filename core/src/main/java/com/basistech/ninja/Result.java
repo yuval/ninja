@@ -19,7 +19,9 @@
 
 package com.basistech.ninja;
 
-public class Result {
+import com.google.common.base.Objects;
+
+public class Result implements Comparable<Result> {
     private final int id;
     private final double score;
 
@@ -34,6 +36,24 @@ public class Result {
 
     public double getScore() {
         return score;
+    }
+
+    @Override
+    public int compareTo(Result o) {
+        if (score < o.score) {
+            return -1;
+        } else if (score > o.score) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("id", getId())
+                .add("score", getScore()).toString();
     }
 
 }
