@@ -154,15 +154,9 @@ public class Network {
             throw new IllegalArgumentException("Expected row/column vector, got " + Network.getDimensions(vec));
         }
         List<Result> results = Lists.newArrayList();
-        boolean rowVec = vec.numRows() == 1;
-        if (rowVec) {
-            for (int c = 0; c < vec.numCols(); c++) {
-                results.add(new Result(c, vec.get(0, c)));
-            }
-        } else {
-            for (int r = 0; r < vec.numRows(); r++) {
-                results.add(new Result(r, vec.get(r, 0)));
-            }
+        double[] values = vec.getMatrix().getData();
+        for (int i = 0; i < values.length; i++) {
+            results.add(new Result(i, values[i]));
         }
         // sorting by score
         Collections.sort(results, Collections.reverseOrder());
