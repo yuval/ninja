@@ -184,6 +184,7 @@ public class Network {
         // TODO: stop before maxEpochs if we found minimum
         // TODO: gradient checking
         for (int i = 0; i < maxEpochs; i++) {
+            System.out.println("Epoch: " + i);
             SimpleMatrix[] grad = epoch(x, y);
             for (int j = 0; j < w.length; j++) {
                 w[j] = w[j].minus(grad[j].scale(epsilon));

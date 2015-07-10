@@ -20,9 +20,6 @@
 package com.basistech.ninja;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multisets;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.BufferedReader;
@@ -36,9 +33,9 @@ public final class EvaluateMNIST {
     private EvaluateMNIST() {
     }
 
-    static SimpleMatrix[] readExamples(File f) throws IOException {
-        SimpleMatrix x = new SimpleMatrix(5000, 784);
-        SimpleMatrix y = new SimpleMatrix(5000, 10);
+    static SimpleMatrix[] readExamples(File f, int numExamples) throws IOException {
+        SimpleMatrix x = new SimpleMatrix(numExamples, 784);
+        SimpleMatrix y = new SimpleMatrix(numExamples, 10);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), Charsets.UTF_8))) {
             int raw = 0;
@@ -70,7 +67,8 @@ public final class EvaluateMNIST {
         File train = new File(args[0]);
         File test = new File(args[1]);
 
-        SimpleMatrix[] examples = readExamples(train);
+        SimpleMatrix[] examples = readExamples(train, 50000);
+        System.out.println("Finished reading examples.");
         SimpleMatrix x = examples[0];
         SimpleMatrix y = examples[1];
 
@@ -79,33 +77,27 @@ public final class EvaluateMNIST {
         SimpleMatrix w2 = new SimpleMatrix(10, 31);
         Network net = new Network(w1, w2);
         net.randomInitialize();
-        int epochs = 2000;
-        double epsilon = 0.01;
+
+        int epochs = 150;
+        double epsilon = 0.8; //learning rate
         net.batchGD(x, y, epochs, epsilon);
 
         // testing
-        examples = readExamples(test);
+        examples = readExamples(test, 10000);
         x = examples[0];
         y = examples[1];
 
-        Multiset<String> multiset = HashMultiset.create();
-
+        int correct = 0;
         for (int r = 0; r < x.numRows(); r++) {
-            List<Result> predicted  = Network.sort(net.apply(x.extractVector(true, r)));
+            SimpleMatrix output = net.apply(x.extractVector(true, r));
+            List<Result> predicted  = Network.sort(output);
             List<Result> actual = Network.sort(y.extractVector(true, r));
-            //System.out.println((y.extractVector(true, r)));
-            if (predicted.get(0).getId() == actual.get(0).getId())  {
-                multiset.add("y");
-            }  else {
-                multiset.add("n");
+            if (predicted.get(0).getId() == actual.get(0).getId()) {
+                correct++;
             }
         }
 
-        for (String s : Multisets.copyHighestCountFirst(multiset).elementSet()) {
-            System.out.println(s + "\t" + multiset.count(s));
-        }
-
-
+        System.out.println(correct);
     }
 
 }
