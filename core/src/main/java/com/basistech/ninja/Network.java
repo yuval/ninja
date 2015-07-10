@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -141,6 +142,25 @@ public class Network {
 
     public SimpleMatrix apply(double ... values) {
         return feedForward(values).a[getNumLayers() - 1];
+    }
+
+    public SimpleMatrix apply(SimpleMatrix m) {
+        return apply(m.getMatrix().getData());
+    }
+
+    // TODO: The API would be simpler if instead we had 'List<Result> apply(SimpleMatrix m)'
+    public static List<Result> sort(SimpleMatrix vec) {
+        if (!vec.isVector()) {
+            throw new IllegalArgumentException("Expected row/column vector, got " + Network.getDimensions(vec));
+        }
+        List<Result> results = Lists.newArrayList();
+        double[] values = vec.getMatrix().getData();
+        for (int i = 0; i < values.length; i++) {
+            results.add(new Result(i, values[i]));
+        }
+        // sorting by score
+        Collections.sort(results, Collections.reverseOrder());
+        return results;
     }
 
     // deltas[0] is always null
