@@ -24,9 +24,11 @@ import com.google.common.collect.Lists;
 import org.ejml.simple.SimpleMatrix;
 import org.junit.Test;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -244,6 +246,32 @@ public class NetworkTest {
 
         assertTrue(w1.isIdentical(net.getWeightMatrix(0), 0.00001));
         assertTrue(w2.isIdentical(net.getWeightMatrix(1), 0.00001));
+    }
+
+    @Test
+    public void testWriteModel() throws Exception {
+        SimpleMatrix w1 = new SimpleMatrix(4, 4, true,
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 10, 11, 12,
+            13, 14, 15, 16
+        );
+        SimpleMatrix w2 = new SimpleMatrix(2, 5, true,
+            1, 2, 3, 4, 5,
+            -6, -7, -8, -9, -10
+        );
+        Network net = new Network(w1, w2);
+
+        StringWriter sw = new StringWriter();
+        BufferedWriter bw = new BufferedWriter(sw);
+        net.writeModel(bw);
+        bw.close();
+
+        Reader reader = new StringReader(sw.toString());
+        Network net2 = Network.fromText(reader);
+
+        assertTrue(w1.isIdentical(net2.getWeightMatrix(0), 0.00001));
+        assertTrue(w2.isIdentical(net2.getWeightMatrix(1), 0.00001));
     }
 
     @Test
