@@ -20,14 +20,19 @@
 package com.basistech.ninja;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
@@ -35,16 +40,36 @@ import java.util.Random;
 
 public class Network {
     private static final Random RANDOM = new Random(8723643324L);
+    private final List<Integer> layerSizes;
     private final SimpleMatrix[] w;
     private final Function activationFunction = Functions.SIGMOID;
 
     public Network(SimpleMatrix ... w) {
         this.w = w;
+        layerSizes = updateLayerSizes();
     }
 
-    public Network(List<SimpleMatrix> w) {
-        this.w = new SimpleMatrix[w.size()];
-        w.toArray(this.w);
+    /**
+     *
+     * @param layerSizes number of units in each layer, not including
+     *                   bias unit
+     */
+    public Network(List<Integer> layerSizes) {
+        this.layerSizes = layerSizes;
+        w = new SimpleMatrix[layerSizes.size() - 1];
+        for (int i = 0; i < w.length; i++) {
+            w[i] = new SimpleMatrix(layerSizes.get(i + 1), layerSizes.get(i) + 1);
+        }
+        randomInitialize();
+    }
+
+    private List<Integer> updateLayerSizes() {
+        List<Integer> result = Lists.newArrayList();
+        for (int i = 0; i < getNumLayers(); i++) {
+            int layerSize = i == 0 ? w[i].numCols() - 1 : w[i - 1].numRows();
+            result.add(layerSize);
+        }
+        return result;
     }
 
     static String getDimensions(SimpleMatrix m) {
@@ -98,12 +123,7 @@ public class Network {
 
     // 0-based; doesn't count bias unit
     public int getNumNeurons(int layer) {
-        if (layer == 0) {
-            // subtract the bias unit
-            return w[layer].numCols() - 1;
-        } else {
-            return w[layer - 1].numRows();
-        }
+        return layerSizes.get(layer);
     }
 
     // 0-based
@@ -144,8 +164,8 @@ public class Network {
         return feedForward(values).a[getNumLayers() - 1];
     }
 
-    public SimpleMatrix apply(SimpleMatrix m) {
-        return apply(m.getMatrix().getData());
+    public SimpleMatrix apply(SimpleMatrix x) {
+        return apply(x.getMatrix().getData());
     }
 
     // TODO: The API would be simpler if instead we had 'List<Result> apply(SimpleMatrix m)'
@@ -258,7 +278,7 @@ public class Network {
             }
         }
 
-        List<SimpleMatrix> w = Lists.newArrayList();
+        SimpleMatrix[] w = new SimpleMatrix[numLayers - 1];
         for (int l = 1; l < numLayers; l++) {
             int rows = layerSizes.get(l);
             int cols = layerSizes.get(l - 1) + 1;
@@ -282,9 +302,39 @@ public class Network {
                 }
                 row++;
             }
-            w.add(m);
+            w[l - 1] = m;
         }
 
         return new Network(w);
+    }
+
+    void writeModel(BufferedWriter writer) throws IOException {
+        // num_layers=3
+        // layer_sizes=784 30 10
+        // w
+        // ...
+
+        writer.write("num_layers=" + getNumLayers());
+        writer.newLine();
+        writer.write("layer_sizes=" + Joiner.on(' ').join(layerSizes));
+        writer.newLine();
+        writer.write("w");
+        writer.newLine();
+        writer.newLine();
+        for (SimpleMatrix m : w) {
+            for (int i = 0; i < m.numRows(); i++) {
+                SimpleMatrix row = m.extractVector(true, i);
+                writer.write(Joiner.on(' ').join(Doubles.asList(row.getMatrix().getData())));
+                writer.newLine();
+            }
+            writer.newLine();
+        }
+    }
+
+    void writeModel(File file) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+            new FileOutputStream(file), Charsets.UTF_8))) {
+            writeModel(writer);
+        }
     }
 }
