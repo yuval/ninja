@@ -78,9 +78,11 @@ public final class EvaluateMNIST {
         Network net = new Network(w1, w2);
         net.randomInitialize();
 
-        int epochs = 150;
-        double epsilon = 0.8; //learning rate
-        net.batchGD(x, y, epochs, epsilon);
+        int maxEpochs = 150;
+        double learningRate = 0.8;
+        for (int i = 0; i < maxEpochs; i++) {
+            net.stochasticGD(x, y, learningRate);
+        }
 
         // testing
         examples = readExamples(test, 10000);

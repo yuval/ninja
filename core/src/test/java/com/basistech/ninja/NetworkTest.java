@@ -301,7 +301,7 @@ public class NetworkTest {
     }
 
     @Test
-    public void testBatchGD() {
+    public void testStochasticGD() {
         SimpleMatrix w1 = new SimpleMatrix(1, 3);
         SimpleMatrix w2 = new SimpleMatrix(1, 2);
         Network net = new Network(w1, w2);
@@ -315,9 +315,11 @@ public class NetworkTest {
         SimpleMatrix x = new SimpleMatrix(4, 2, true, 0, 0, 0, 1, 1, 0, 1, 1);
         SimpleMatrix y = new SimpleMatrix(4, 1, true, 1, 1, 1, 0);
 
-        int epochs = 100000;
-        double epsilon = 0.01;
-        net.batchGD(x, y, epochs, epsilon);
+        int maxEpochs = 100000;
+        double learningRate = 0.01;
+        for (int i = 0; i < maxEpochs; i++) {
+            net.stochasticGD(x, y, learningRate);
+        }
 
         System.out.println(net.apply(0, 0));
         System.out.println(net.apply(0, 1));

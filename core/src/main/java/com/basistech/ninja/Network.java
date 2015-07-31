@@ -196,23 +196,19 @@ public class Network {
         return deltas;
     }
 
-    public void batchGD(SimpleMatrix x, SimpleMatrix y, int maxEpochs, double epsilon) {
+    public void stochasticGD(SimpleMatrix x, SimpleMatrix y, double learningRate) {
         if (x.numRows() != y.numRows()) {
             throw new IllegalArgumentException("x and y must have the same number of rows!");
         }
 
-        // TODO: stop before maxEpochs if we found minimum
         // TODO: gradient checking
-        for (int i = 0; i < maxEpochs; i++) {
-            System.out.println("Epoch: " + i);
-            SimpleMatrix[] grad = epoch(x, y);
-            for (int j = 0; j < w.length; j++) {
-                w[j] = w[j].minus(grad[j].scale(epsilon));
-            }
+        SimpleMatrix[] grad = computeGradient(x, y);
+        for (int i = 0; i < w.length; i++) {
+            w[i] = w[i].minus(grad[i].scale(learningRate));
         }
     }
 
-    SimpleMatrix[] epoch(SimpleMatrix x, SimpleMatrix y) {
+    SimpleMatrix[] computeGradient(SimpleMatrix x, SimpleMatrix y) {
         int numExamples = x.numRows();
 
         SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
