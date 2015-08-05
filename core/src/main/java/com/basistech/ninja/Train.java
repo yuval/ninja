@@ -102,7 +102,7 @@ public class Train {
         //void train(int batchSize, int epochs, double learningRate, File modelFile) throws IOException {
         List<Integer> layerSizes = Lists.newArrayList(784, 30, 10);
         Train that = new Train(layerSizes, new File(args[1]));
-//        size        tp        fn        fp         P         R        F1
+//                                             size      tp        fn        fp         P         R        F1
 //        0                                    980       963        17        38     0.962     0.983     0.972
 //        1                                   1135      1118        17        27     0.976     0.985     0.981
 //        2                                   1032       973        59        36     0.964     0.943     0.953
@@ -115,7 +115,7 @@ public class Train {
 //        9                                   1009       949        60        49     0.951     0.941     0.946
 //
 //        Total counts:                      10000      9596       404       404         -         -         -
-//                Macro Average:                         -         -         -         -     0.960     0.959     0.959
+//        Macro Average:                         -         -         -         -     0.960     0.959     0.959
 //        Micro Average:                         -         -         -         -     0.960     0.960     0.960
         that.train(100, 15, 0.7, new File(args[2]));
     }
