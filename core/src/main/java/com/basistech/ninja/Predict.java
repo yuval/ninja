@@ -56,11 +56,14 @@ public class Predict {
 
         Predict that = new Predict(net);
 
+        int inputNeurons = net.getNumNeurons(0);
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
             new FileInputStream(examplesFile), Charsets.UTF_8));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
                  new FileOutputStream(responseFile), Charsets.UTF_8))) {
 
+            int lineno = 0;
             String line;
             while ((line = reader.readLine()) != null) {
                 // 1 1:1 2:1 5:1
@@ -70,12 +73,21 @@ public class Predict {
                     String[] feature = fields[i].split(":");
                     int index = Integer.valueOf(feature[0]);
                     double value = Double.valueOf(feature[1]);
+                    if (index < 0 || index >= inputNeurons) {
+                        throw new RuntimeException(
+                            String.format(
+                                "line %d: index (%d) out of range [0, %d); wrong network architecture?",
+                                lineno + 1,
+                                index,
+                                inputNeurons));
+                    }
                     x.set(0, index, value);
                 }
 
                 Result result = that.predict(x).get(0);
                 writer.write(String.valueOf(result.getId()));
                 writer.newLine();
+                lineno++;
             }
         }
     }
