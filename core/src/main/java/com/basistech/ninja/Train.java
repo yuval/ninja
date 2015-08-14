@@ -21,6 +21,12 @@ package com.basistech.ninja;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.BufferedReader;
@@ -45,7 +51,7 @@ public class Train {
         readExmaples(examplesFile);
         int numBatches = (int) Math.ceil((double) x.numRows() / batchSize);
         for (int i = 0; i < epochs; i++) {
-            System.out.println("Epoch: " + i);
+            System.out.println("Epoch: " + i + 1);
             for (int batchIndex = 0; batchIndex < numBatches; batchIndex++) {
                 int startRow = batchIndex * batchSize;
                 int endRow = (batchIndex + 1) * batchSize;
@@ -69,8 +75,12 @@ public class Train {
                 lines++;
             }
         }
-        x = new SimpleMatrix(lines, net.getNumNeurons(0));
-        y = new SimpleMatrix(lines, net.getNumNeurons(net.getNumLayers() - 1));
+
+        int inputNeurons = net.getNumNeurons(0);
+        int outputNeurons = net.getNumNeurons(net.getNumLayers() - 1);
+
+        x = new SimpleMatrix(lines, inputNeurons);
+        y = new SimpleMatrix(lines, outputNeurons);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
             new FileInputStream(file), Charsets.UTF_8))) {
@@ -81,11 +91,27 @@ public class Train {
                 // 1 1:1 2:1 5:1
                 String[] fields = line.split("\\s+");
                 int yval = Integer.valueOf(fields[0]);
+                if (yval < 0 || yval >= outputNeurons) {
+                    throw new RuntimeException(
+                        String.format(
+                            "line %d: yval (%d) out of range [0, %d); wrong network architecture?",
+                            lineno + 1,
+                            yval,
+                            outputNeurons));
+                }
                 y.set(lineno, yval, 1.0);
                 for (int i = 1; i < fields.length; i++) {
                     String[] feature = fields[i].split(":");
                     int index = Integer.valueOf(feature[0]);
                     double value = Double.valueOf(feature[1]);
+                    if (index < 0 || index >= inputNeurons) {
+                        throw new RuntimeException(
+                            String.format(
+                                "line %d: index (%d) out of range [0, %d); wrong network architecture?",
+                                lineno + 1,
+                                index,
+                                inputNeurons));
+                    }
                     x.set(lineno, index, value);
                 }
                 lineno++;
@@ -93,30 +119,67 @@ public class Train {
         }
     }
 
+    private static void usage(Options options) {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.setWidth(80);
+        formatter.printHelp("Usage: Train [options]", options);
+        System.out.println();
+    }
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
-            System.err.println("Usage: Train config examples model");
+        String defaultBatchSize = "10";
+        String deafaultEpochs = "5";
+        String defaultLearningRate = "0.7";
+
+        Options options = new Options();
+        Option option;
+        option = new Option(null, "examples", true, "input examples file (required)");
+        option.setRequired(true);
+        options.addOption(option);
+        option = new Option(null, "model", true, "output model file (required)");
+        option.setRequired(true);
+        options.addOption(option);
+        option = new Option(null, "layer-sizes", true,
+            "layer sizes, including input/output, e.g. 3 4 2 (required)");
+        option.setRequired(true);
+        option.setArgs(Option.UNLIMITED_VALUES);
+        options.addOption(option);
+        option = new Option(null, "batch-size", true,
+            String.format("batch size (default = %s)", defaultBatchSize));
+        options.addOption(option);
+        option = new Option(null, "epochs", true,
+            String.format("epochs (default = %s)", deafaultEpochs));
+        options.addOption(option);
+        option = new Option(null, "learning-rate", true,
+            String.format("learning-rate (default = %s)", defaultLearningRate));
+        options.addOption(option);
+
+        CommandLineParser parser = new GnuParser();
+        CommandLine cmdline = null;
+        try {
+            cmdline = parser.parse(options, args);
+        } catch (org.apache.commons.cli.ParseException e) {
+            System.err.println(e.getMessage());
+            usage(options);
+            System.exit(1);
+        }
+        String[] remaining = cmdline.getArgs();
+        if (remaining == null) {
+            usage(options);
             System.exit(1);
         }
 
-        //void train(int batchSize, int epochs, double learningRate, File modelFile) throws IOException {
-        List<Integer> layerSizes = Lists.newArrayList(784, 30, 10);
-        Train that = new Train(layerSizes, new File(args[1]));
-//                                             size      tp        fn        fp         P         R        F1
-//        0                                    980       963        17        38     0.962     0.983     0.972
-//        1                                   1135      1118        17        27     0.976     0.985     0.981
-//        2                                   1032       973        59        36     0.964     0.943     0.953
-//        3                                   1010       972        38        66     0.936     0.962     0.949
-//        4                                    982       940        42        28     0.971     0.957     0.964
-//        5                                    892       845        47        26     0.970     0.947     0.959
-//        6                                    958       933        25        44     0.955     0.974     0.964
-//        7                                   1028       979        49        36     0.965     0.952     0.958
-//        8                                    974       924        50        54     0.945     0.949     0.947
-//        9                                   1009       949        60        49     0.951     0.941     0.946
-//
-//        Total counts:                      10000      9596       404       404         -         -         -
-//        Macro Average:                         -         -         -         -     0.960     0.959     0.959
-//        Micro Average:                         -         -         -         -     0.960     0.960     0.960
-        that.train(100, 15, 0.7, new File(args[2]));
+        List<Integer> layerSizes = Lists.newArrayList();
+        for (String s : cmdline.getOptionValues("layer-sizes")) {
+            layerSizes.add(Integer.parseInt(s));
+        }
+
+        File examplesFile = new File(cmdline.getOptionValue("examples"));
+        Train that = new Train(layerSizes, examplesFile);
+        int batchSize = Integer.parseInt(cmdline.getOptionValue("batch-size", defaultBatchSize));
+        int epochs = Integer.parseInt(cmdline.getOptionValue("epochs", deafaultEpochs));
+        double learningRate = Double.parseDouble(cmdline.getOptionValue("learning-rate", defaultLearningRate));
+        File modelFile = new File(cmdline.getOptionValue("model"));
+
+        that.train(batchSize, epochs, learningRate, modelFile);
     }
 }
