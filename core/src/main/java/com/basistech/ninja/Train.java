@@ -122,7 +122,7 @@ public class Train {
     private static void usage(Options options) {
         HelpFormatter formatter = new HelpFormatter();
         formatter.setWidth(80);
-        formatter.printHelp("Usage: Train [options]", options);
+        formatter.printHelp("Train [options]", options);
         System.out.println();
     }
     public static void main(String[] args) throws IOException {
