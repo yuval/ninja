@@ -51,7 +51,7 @@ public class Train {
         readExmaples(examplesFile);
         int numBatches = (int) Math.ceil((double) x.numRows() / batchSize);
         for (int i = 0; i < epochs; i++) {
-            System.out.println("Epoch: " + i + 1);
+            System.out.println("Epoch: " + (i + 1));
             for (int batchIndex = 0; batchIndex < numBatches; batchIndex++) {
                 int startRow = batchIndex * batchSize;
                 int endRow = (batchIndex + 1) * batchSize;
