@@ -68,7 +68,7 @@ public class Predict {
             while ((line = reader.readLine()) != null) {
                 // 1 1:1 2:1 5:1
                 String[] fields = line.split("\\s+");
-                SimpleMatrix x = new SimpleMatrix(1, fields.length - 1);
+                SimpleMatrix x = new SimpleMatrix(1, inputNeurons);
                 for (int i = 1; i < fields.length; i++) {
                     String[] feature = fields[i].split(":");
                     int index = Integer.valueOf(feature[0]);
