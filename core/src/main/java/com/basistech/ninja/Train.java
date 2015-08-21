@@ -19,7 +19,6 @@
 
 package com.basistech.ninja;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,11 +28,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.ejml.simple.SimpleMatrix;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 
 public class Train {
@@ -48,74 +44,53 @@ public class Train {
     }
 
     void train(int batchSize, int epochs, double learningRate, File modelFile) throws IOException {
-        readExmaples(examplesFile);
-        int numBatches = (int) Math.ceil((double) x.numRows() / batchSize);
         for (int i = 0; i < epochs; i++) {
             System.out.println("Epoch: " + (i + 1));
-            for (int batchIndex = 0; batchIndex < numBatches; batchIndex++) {
-                int startRow = batchIndex * batchSize;
-                int endRow = (batchIndex + 1) * batchSize;
-                if (endRow > x.numRows()) {
-                    endRow = x.numRows();
-                }
-                SimpleMatrix batchX = x.extractMatrix(startRow, endRow, 0, x.numCols());
-                SimpleMatrix batchY = y.extractMatrix(startRow, endRow, 0, y.numCols());
-                net.stochasticGD(batchX, batchY, learningRate);
+            for (List<String> batch : new ExamplesIterator(examplesFile, batchSize)) {
+                parseExamples(batch);
+                net.stochasticGD(x, y, learningRate);
+                System.out.println("foo");
             }
         }
         net.writeModel(modelFile);
     }
 
-    void readExmaples(File file) throws IOException {
-        int lines = 0;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-            new FileInputStream(file), Charsets.UTF_8))) {
-
-            while (reader.readLine() != null) {
-                lines++;
-            }
-        }
-
+    void parseExamples(List<String> lines) throws IOException {
         int inputNeurons = net.getNumNeurons(0);
         int outputNeurons = net.getNumNeurons(net.getNumLayers() - 1);
 
-        x = new SimpleMatrix(lines, inputNeurons);
-        y = new SimpleMatrix(lines, outputNeurons);
+        x = new SimpleMatrix(lines.size(), inputNeurons);
+        y = new SimpleMatrix(lines.size(), outputNeurons);
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-            new FileInputStream(file), Charsets.UTF_8))) {
-
-            int lineno = 0;
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // 1 1:1 2:1 5:1
-                String[] fields = line.split("\\s+");
-                int yval = Integer.valueOf(fields[0]);
-                if (yval < 0 || yval >= outputNeurons) {
-                    throw new RuntimeException(
+        int lineno = 0;
+        for (String line : lines) {
+            // 1 1:1 2:1 5:1
+            String[] fields = line.split("\\s+");
+            int yval = Integer.valueOf(fields[0]);
+            if (yval < 0 || yval >= outputNeurons) {
+                throw new RuntimeException(
                         String.format(
-                            "line %d: yval (%d) out of range [0, %d); wrong network architecture?",
-                            lineno + 1,
-                            yval,
-                            outputNeurons));
-                }
-                y.set(lineno, yval, 1.0);
-                for (int i = 1; i < fields.length; i++) {
-                    String[] feature = fields[i].split(":");
-                    int index = Integer.valueOf(feature[0]);
-                    double value = Double.valueOf(feature[1]);
-                    if (index < 0 || index >= inputNeurons) {
-                        throw new RuntimeException(
-                            String.format(
-                                "line %d: index (%d) out of range [0, %d); wrong network architecture?",
+                                "line %d: yval (%d) out of range [0, %d); wrong network architecture?",
                                 lineno + 1,
-                                index,
-                                inputNeurons));
-                    }
-                    x.set(lineno, index, value);
-                }
-                lineno++;
+                                yval,
+                                outputNeurons));
             }
+            y.set(lineno, yval, 1.0);
+            for (int i = 1; i < fields.length; i++) {
+                String[] feature = fields[i].split(":");
+                int index = Integer.valueOf(feature[0]);
+                double value = Double.valueOf(feature[1]);
+                if (index < 0 || index >= inputNeurons) {
+                    throw new RuntimeException(
+                            String.format(
+                                    "line %d: index (%d) out of range [0, %d); wrong network architecture?",
+                                    lineno + 1,
+                                    index,
+                                    inputNeurons));
+                }
+                x.set(lineno, index, value);
+            }
+            lineno++;
         }
     }
 
