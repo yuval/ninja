@@ -49,7 +49,6 @@ public class Train {
             for (List<String> batch : new ExamplesIterator(examplesFile, batchSize)) {
                 parseExamples(batch);
                 net.stochasticGD(x, y, learningRate);
-                System.out.println("foo");
             }
         }
         net.writeModel(modelFile);
@@ -68,6 +67,7 @@ public class Train {
             String[] fields = line.split("\\s+");
             int yval = Integer.valueOf(fields[0]);
             if (yval < 0 || yval >= outputNeurons) {
+                // TODO: Fix bogus lineno
                 throw new RuntimeException(
                         String.format(
                                 "line %d: yval (%d) out of range [0, %d); wrong network architecture?",
@@ -81,6 +81,7 @@ public class Train {
                 int index = Integer.valueOf(feature[0]);
                 double value = Double.valueOf(feature[1]);
                 if (index < 0 || index >= inputNeurons) {
+                    // TODO: Fix bogus lineno
                     throw new RuntimeException(
                             String.format(
                                     "line %d: index (%d) out of range [0, %d); wrong network architecture?",
