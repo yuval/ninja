@@ -315,10 +315,20 @@ public class NetworkTest {
         SimpleMatrix x = new SimpleMatrix(4, 2, true, 0, 0, 0, 1, 1, 0, 1, 1);
         SimpleMatrix y = new SimpleMatrix(4, 1, true, 1, 1, 1, 0);
 
+        int numLayers = net.getNumLayers();
         int maxEpochs = 100000;
         double learningRate = 0.01;
         for (int i = 0; i < maxEpochs; i++) {
-            net.stochasticGD(x, y, learningRate);
+            SimpleMatrix[] bigDelta = new SimpleMatrix[numLayers - 1];
+            for (int l = 0; l < numLayers - 1; l++) {
+                bigDelta[l] = new SimpleMatrix(net.getWeightMatrix(l).numRows(),
+                        net.getWeightMatrix(l).numCols());
+            }
+            for (int j = 0; j < x.numRows(); j++) {
+                net.updateBigDelta(x.extractVector(true, j), y.extractVector(true, j), bigDelta);
+            }
+            SimpleMatrix[] grad = net.computeGradient(bigDelta, x.numRows());
+            net.stochasticGD(grad, learningRate);
         }
 
         System.out.println(net.apply(0, 0));

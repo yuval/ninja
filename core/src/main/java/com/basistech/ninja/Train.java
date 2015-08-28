@@ -19,6 +19,7 @@
 
 package com.basistech.ninja;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -28,38 +29,75 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.ejml.simple.SimpleMatrix;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 public class Train {
     private final Network net;
     private final File examplesFile;
-    private SimpleMatrix x;
-    private SimpleMatrix y;
+//    private SimpleMatrix x;
+//    private SimpleMatrix y;
 
     Train(List<Integer> layerSizes, File examplesFile) {
         net = new Network(layerSizes);
         this.examplesFile = examplesFile;
     }
 
-    void train(int batchSize, int epochs, double learningRate, File modelFile) throws IOException {
+    void train(int batchSize, int epochs, double learningRate,
+               File modelFile) throws IOException {
+        int numLayers = net.getNumLayers();
+
         for (int i = 0; i < epochs; i++) {
             System.out.println("Epoch: " + (i + 1));
-            for (List<String> batch : new ExamplesIterator(examplesFile, batchSize)) {
-                parseExamples(batch);
-                net.stochasticGD(x, y, learningRate);
+
+            SimpleMatrix[] bigDelta = new SimpleMatrix[numLayers - 1];
+            for (int l = 0; l < numLayers - 1; l++) {
+                bigDelta[l] = new SimpleMatrix(net.getWeightMatrix(l).numRows(),
+                        net.getWeightMatrix(l).numCols());
+            }
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(examplesFile), Charsets.UTF_8))) {
+                String line;
+                int counter = 0;
+                int batchno = 0;
+                while ((line = reader.readLine()) != null) {
+                    counter++;
+                    List<String> lines = Lists.newArrayList(line);
+                    SimpleMatrix[] example = parseExamples(lines);
+                    net.updateBigDelta(example[0], example[1], bigDelta);
+                    System.out.println("line: " + counter);
+                    if (counter == batchSize) {
+                        System.out.println("Batch: " + ++batchno);
+                        SimpleMatrix[] grad = net.computeGradient(bigDelta, counter);
+                        net.stochasticGD(grad, learningRate);
+                        counter = 0;
+                        for (int l = 0; l < numLayers - 1; l++) {
+                            bigDelta[l] = new SimpleMatrix(net.getWeightMatrix(l).numRows(),
+                                    net.getWeightMatrix(l).numCols());
+                        }
+                    }
+                }
+
+                if (counter > 0) {
+                    SimpleMatrix[] grad = net.computeGradient(bigDelta, counter);
+                    net.stochasticGD(grad, learningRate);
+                }
             }
         }
         net.writeModel(modelFile);
     }
 
-    void parseExamples(List<String> lines) throws IOException {
+    SimpleMatrix[] parseExamples(List<String> lines) throws IOException {
         int inputNeurons = net.getNumNeurons(0);
         int outputNeurons = net.getNumNeurons(net.getNumLayers() - 1);
 
-        x = new SimpleMatrix(lines.size(), inputNeurons);
-        y = new SimpleMatrix(lines.size(), outputNeurons);
+        SimpleMatrix x = new SimpleMatrix(inputNeurons, lines.size());
+        SimpleMatrix y = new SimpleMatrix(outputNeurons, lines.size());
 
         int lineno = 0;
         for (String line : lines) {
@@ -75,7 +113,7 @@ public class Train {
                                 yval,
                                 outputNeurons));
             }
-            y.set(lineno, yval, 1.0);
+            y.set(yval, lineno, 1.0);
             for (int i = 1; i < fields.length; i++) {
                 String[] feature = fields[i].split(":");
                 int index = Integer.valueOf(feature[0]);
@@ -89,10 +127,11 @@ public class Train {
                                     index,
                                     inputNeurons));
                 }
-                x.set(lineno, index, value);
+                x.set(index, lineno, value);
             }
             lineno++;
         }
+        return new SimpleMatrix[] {x, y};
     }
 
     private static void usage(Options options) {

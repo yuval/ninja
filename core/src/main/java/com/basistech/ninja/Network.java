@@ -196,41 +196,27 @@ public class Network {
         return deltas;
     }
 
-    public void stochasticGD(SimpleMatrix x, SimpleMatrix y, double learningRate) {
-        if (x.numRows() != y.numRows()) {
-            throw new IllegalArgumentException("x and y must have the same number of rows!");
-        }
-
-        // TODO: gradient checking
-        SimpleMatrix[] grad = computeGradient(x, y);
+    public void stochasticGD(SimpleMatrix[] grad, double learningRate) {
         for (int i = 0; i < w.length; i++) {
             w[i] = w[i].minus(grad[i].scale(learningRate));
         }
     }
 
-    SimpleMatrix[] computeGradient(SimpleMatrix x, SimpleMatrix y) {
-        int numExamples = x.numRows();
-
-        SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
-        for (int l = 0; l < getNumLayers() - 1; l++) {
-            bigDelta[l] = new SimpleMatrix(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
-        }
-
-        for (int i = 0; i < numExamples; i++) {
-            SimpleMatrix xi = x.extractVector(true, i).transpose();
-            SimpleMatrix yi = y.extractVector(true, i).transpose();
-            ForwardVectors fv = feedForward(xi);
-            SimpleMatrix[] deltas = backprop(fv, yi);
-            for (int l = 0; l < bigDelta.length; l++) {
-                bigDelta[l] = bigDelta[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
-            }
-        }
-
+    SimpleMatrix[] computeGradient(SimpleMatrix[] bigDelta, int numExamples) {
         SimpleMatrix[] grad = new SimpleMatrix[getNumLayers() - 1];
         for (int i = 0; i < getNumLayers() - 1; i++) {
             grad[i] = bigDelta[i].divide(numExamples);
         }
         return grad;
+    }
+
+    void updateBigDelta(SimpleMatrix xi, SimpleMatrix yi,
+                                  SimpleMatrix[] bigDelta) {
+        ForwardVectors fv = feedForward(xi);
+        SimpleMatrix[] deltas = backprop(fv, yi);
+        for (int l = 0; l < bigDelta.length; l++) {
+            bigDelta[l] = bigDelta[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
+        }
     }
 
     @Override
