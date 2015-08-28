@@ -58,8 +58,9 @@ public class Train {
         int inputNeurons = net.getNumNeurons(0);
         int outputNeurons = net.getNumNeurons(net.getNumLayers() - 1);
 
-        x = new SimpleMatrix(lines.size(), inputNeurons);
-        y = new SimpleMatrix(lines.size(), outputNeurons);
+        // each example is a col vector
+        x = new SimpleMatrix(inputNeurons, lines.size());
+        y = new SimpleMatrix(outputNeurons, lines.size());
 
         int lineno = 0;
         for (String line : lines) {
@@ -75,7 +76,7 @@ public class Train {
                                 yval,
                                 outputNeurons));
             }
-            y.set(lineno, yval, 1.0);
+            y.set(yval, lineno, 1.0);
             for (int i = 1; i < fields.length; i++) {
                 String[] feature = fields[i].split(":");
                 int index = Integer.valueOf(feature[0]);
@@ -89,7 +90,7 @@ public class Train {
                                     index,
                                     inputNeurons));
                 }
-                x.set(lineno, index, value);
+                x.set(index, lineno, value);
             }
             lineno++;
         }

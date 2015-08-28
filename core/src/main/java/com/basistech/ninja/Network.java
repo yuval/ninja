@@ -196,9 +196,10 @@ public class Network {
         return deltas;
     }
 
+    // every example in 'x' and 'y' should b a col vector
     public void stochasticGD(SimpleMatrix x, SimpleMatrix y, double learningRate) {
-        if (x.numRows() != y.numRows()) {
-            throw new IllegalArgumentException("x and y must have the same number of rows!");
+        if (x.numCols() != y.numCols()) {
+            throw new IllegalArgumentException("x and y must have the same number of columns!");
         }
 
         // TODO: gradient checking
@@ -209,7 +210,7 @@ public class Network {
     }
 
     SimpleMatrix[] computeGradient(SimpleMatrix x, SimpleMatrix y) {
-        int numExamples = x.numRows();
+        int numExamples = x.numCols();
 
         SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
         for (int l = 0; l < getNumLayers() - 1; l++) {
@@ -217,8 +218,8 @@ public class Network {
         }
 
         for (int i = 0; i < numExamples; i++) {
-            SimpleMatrix xi = x.extractVector(true, i).transpose();
-            SimpleMatrix yi = y.extractVector(true, i).transpose();
+            SimpleMatrix xi = x.extractVector(false, i);
+            SimpleMatrix yi = y.extractVector(false, i);
             ForwardVectors fv = feedForward(xi);
             SimpleMatrix[] deltas = backprop(fv, yi);
             for (int l = 0; l < bigDelta.length; l++) {
