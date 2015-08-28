@@ -196,7 +196,7 @@ public class Network {
         return deltas;
     }
 
-    // every example in 'x' and 'y' should b a col vector
+    // every example in 'x' and 'y' should be a col vector
     public void stochasticGD(SimpleMatrix x, SimpleMatrix y, double learningRate) {
         if (x.numCols() != y.numCols()) {
             throw new IllegalArgumentException("x and y must have the same number of columns!");
@@ -209,6 +209,7 @@ public class Network {
         }
     }
 
+    // every example in 'x' and 'y' should be a col vector
     SimpleMatrix[] computeGradient(SimpleMatrix x, SimpleMatrix y) {
         int numExamples = x.numCols();
 
