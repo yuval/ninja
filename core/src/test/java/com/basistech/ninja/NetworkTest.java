@@ -312,8 +312,8 @@ public class NetworkTest {
         // 0 1 --> 1
         // 1 0 --> 1
         // 1 1 --> 0
-        SimpleMatrix x = new SimpleMatrix(4, 2, true, 0, 0, 0, 1, 1, 0, 1, 1);
-        SimpleMatrix y = new SimpleMatrix(4, 1, true, 1, 1, 1, 0);
+        SimpleMatrix x = new SimpleMatrix(2, 4, false, 0, 0, 0, 1, 1, 0, 1, 1);
+        SimpleMatrix y = new SimpleMatrix(1, 4, false, 1, 1, 1, 0);
 
         int maxEpochs = 100000;
         double learningRate = 0.01;
