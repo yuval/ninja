@@ -19,7 +19,7 @@
 
 package com.basistech.ninja;
 
-import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
+import com.basistech.ninja.ejml.ColVector;
 import com.google.common.collect.Lists;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

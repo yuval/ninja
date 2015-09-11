@@ -19,7 +19,7 @@
 
 package com.basistech.ninja;
 
-import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
+import com.basistech.ninja.ejml.ColVector;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -184,14 +184,9 @@ public class Network {
         ColVector[] deltas = new ColVector[layers];  // just don't use slot 0
         deltas[layers - 1] = fv.a[layers - 1].minus(y);
         for (int l = deltas.length - 2; l >= 1; l--) {
-
             SimpleMatrix t = w[l].transpose();
             ColVector v = ColVector.mult(t, deltas[l + 1]);
             deltas[l] = v.elementMult(Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
-
-//            deltas[l] = w[l].transpose().mult(deltas[l + 1]).elementMult(
-//                Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
-
             deltas[l] = Network.stripBiasUnit(deltas[l]);
         }
         return deltas;

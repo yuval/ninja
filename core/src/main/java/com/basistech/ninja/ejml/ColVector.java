@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.basistech.ninja.com.basistech.ninja.ejml;
+package com.basistech.ninja.ejml;
 
 import org.ejml.simple.SimpleMatrix;
 
@@ -33,7 +33,9 @@ public class ColVector {
     }
 
     public ColVector(SimpleMatrix matrix) {
-        // TODO: check col vector
+        if (matrix.numCols() > 1) {
+            throw new IllegalArgumentException("Matrix must be a column vector! (i.e., single column)");
+        }
         this.data = matrix;
     }
 

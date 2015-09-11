@@ -19,7 +19,7 @@
 
 package com.basistech.ninja;
 
-import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
+import com.basistech.ninja.ejml.ColVector;
 import org.ejml.simple.SimpleMatrix;
 
 public final class Functions {

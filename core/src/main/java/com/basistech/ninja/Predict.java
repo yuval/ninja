@@ -19,7 +19,7 @@
 
 package com.basistech.ninja;
 
-import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
+import com.basistech.ninja.ejml.ColVector;
 import com.google.common.base.Charsets;
 
 import java.io.BufferedReader;
