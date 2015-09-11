@@ -19,6 +19,7 @@
 
 package com.basistech.ninja;
 
+import com.basistech.ninja.ejml.ColVector;
 import org.ejml.simple.SimpleMatrix;
 
 public final class Functions {
@@ -55,6 +56,14 @@ public final class Functions {
             for (int j = 0; j < m.numCols(); j++) {
                 result.set(i, j, f.apply(m.get(i, j)));
             }
+        }
+        return result;
+    }
+
+    public static ColVector apply(Function f, ColVector vec) {
+        ColVector result = new ColVector(vec.numRows());
+        for (int i = 0; i < vec.numRows(); i++) {
+            result.set(i, f.apply(vec.get(i)));
         }
         return result;
     }
