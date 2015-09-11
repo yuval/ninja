@@ -19,8 +19,8 @@
 
 package com.basistech.ninja;
 
+import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
 import com.google.common.base.Charsets;
-import org.ejml.simple.SimpleMatrix;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -39,8 +39,8 @@ public class Predict {
         this.net = net;
     }
 
-    List<Result> predict(SimpleMatrix x) {
-        SimpleMatrix outVector = net.apply(x);
+    List<Result> predict(ColVector x) {
+        ColVector outVector = net.apply(x);
         return Network.sort(outVector);
     }
 
@@ -68,7 +68,7 @@ public class Predict {
             while ((line = reader.readLine()) != null) {
                 // 1 1:1 2:1 5:1
                 String[] fields = line.split("\\s+");
-                SimpleMatrix x = new SimpleMatrix(1, inputNeurons);
+                ColVector x = new ColVector(inputNeurons);
                 for (int i = 1; i < fields.length; i++) {
                     String[] feature = fields[i].split(":");
                     int index = Integer.valueOf(feature[0]);
@@ -81,7 +81,7 @@ public class Predict {
                                 index,
                                 inputNeurons));
                     }
-                    x.set(0, index, value);
+                    x.set(index, value);
                 }
 
                 Result result = that.predict(x).get(0);

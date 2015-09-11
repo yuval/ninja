@@ -19,6 +19,7 @@
 
 package com.basistech.ninja;
 
+import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import org.ejml.simple.SimpleMatrix;
@@ -35,21 +36,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class NetworkTest {
-    private boolean isZero(SimpleMatrix m) {
-        if (m.numRows() != 1 && m.numCols() != 1) {
+    private boolean isZero(ColVector v) {
+        if (v.numRows() != 1) {
             throw new RuntimeException(String.format(
-                    "only 1x1 matrix supported; got %dx%d", m.numRows(), m.numCols()));
+                    "only 1x1 matrix supported; got %dx%d", v.numRows(), v.numCols()));
         }
-        double value = m.get(0, 0);
+        double value = v.get(0);
         return value > 0.0 && value < 0.1;
     }
 
-    private boolean isOne(SimpleMatrix m) {
-        if (m.numRows() != 1 && m.numCols() != 1) {
+    private boolean isOne(ColVector v) {
+        if (v.numRows() != 1) {
             throw new RuntimeException(String.format(
-                    "only 1x1 matrix supported; got %dx%d", m.numRows(), m.numCols()));
+                    "only 1x1 matrix supported; got %dx%d", v.numRows(), v.numCols()));
         }
-        double value = m.get(0, 0);
+        double value = v.get(0);
         return value > 0.9 && value < 1.0;
     }
 
@@ -107,21 +108,21 @@ public class NetworkTest {
         SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
         SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
 
-        SimpleMatrix x = new SimpleMatrix(2, 1, true, 0, 0);
-        SimpleMatrix y = new SimpleMatrix(1, 1, true, 1);
+        ColVector x = new ColVector(0.0, 0.0);
+        ColVector y = new ColVector(1.0);
 
         Network net = new Network(w1, w2);
-        SimpleMatrix[] d = net.backprop(net.feedForward(x), y);
+        ColVector[] d = net.backprop(net.feedForward(x), y);
 
-        SimpleMatrix d3 = d[2];
+        ColVector d3 = d[2];
         assertEquals(1, d3.numRows());
         assertEquals(1, d3.numCols());
-        assertEquals(-0.007, d3.get(0, 0) , 0.001);
+        assertEquals(-0.007, d3.get(0) , 0.001);
 
-        SimpleMatrix d2 = d[1];
+        ColVector d2 = d[1];
         assertEquals(1, d2.numRows());
         assertEquals(1, d2.numCols());
-        assertEquals(0.0, d2.get(0, 0), 0.001);
+        assertEquals(0.0, d2.get(0), 0.001);
     }
 
     @Test
@@ -137,25 +138,25 @@ public class NetworkTest {
                 -6, -7, -8, -9, -10
         );
 
-        SimpleMatrix x = new SimpleMatrix(3, 1, true, 0, 0, 0);
-        SimpleMatrix y = new SimpleMatrix(2, 1, true, 0, 0);
+        ColVector x = new ColVector(0.0, 0.0, 0.0);
+        ColVector y = new ColVector(0.0, 0.0);
 
         Network net = new Network(w1, w2);
-        SimpleMatrix[] d = net.backprop(net.feedForward(x), y);
+        ColVector[] d = net.backprop(net.feedForward(x), y);
 
-        SimpleMatrix d3 = d[2];
+        ColVector d3 = d[2];
         assertEquals(2, d3.numRows());
         assertEquals(1, d3.numCols());
-        assertEquals(1.0, d3.get(0, 0), 0.001);
-        assertEquals(0.0, d3.get(1, 0), 0.001);
+        assertEquals(1.0, d3.get(0), 0.001);
+        assertEquals(0.0, d3.get(1), 0.001);
 
-        SimpleMatrix d2 = d[1];
+        ColVector d2 = d[1];
         assertEquals(4, d2.numRows());
         assertEquals(1, d2.numCols());
-        assertEquals(0.393, d2.get(0, 0), 0.001);
-        assertEquals(0.02, d2.get(1, 0), 0.001);
-        assertEquals(0.0, d2.get(2, 0), 0.001);
-        assertEquals(0.0, d2.get(3, 0), 0.001);
+        assertEquals(0.393, d2.get(0), 0.001);
+        assertEquals(0.02, d2.get(1), 0.001);
+        assertEquals(0.0, d2.get(2), 0.001);
+        assertEquals(0.0, d2.get(3), 0.001);
     }
 
     @Test
@@ -204,11 +205,11 @@ public class NetworkTest {
         );
 
         Network net = new Network(w2, w3);
-        SimpleMatrix output = net.apply(1, 1, 1);
+        ColVector output = net.apply(1, 1, 1);
         assertEquals(2, output.numRows());
         assertEquals(1, output.numCols());
-        assertEquals(1.0, output.get(0, 0), 0.00001);
-        assertEquals(0.0, output.get(1, 0), 0.00001);
+        assertEquals(1.0, output.get(0), 0.00001);
+        assertEquals(0.0, output.get(1), 0.00001);
     }
 
     @Test
@@ -312,8 +313,18 @@ public class NetworkTest {
         // 0 1 --> 1
         // 1 0 --> 1
         // 1 1 --> 0
-        SimpleMatrix x = new SimpleMatrix(2, 4, false, 0, 0, 0, 1, 1, 0, 1, 1);
-        SimpleMatrix y = new SimpleMatrix(1, 4, false, 1, 1, 1, 0);
+        ColVector[] x = new ColVector[] {
+            new ColVector(0.0, 0.0),
+            new ColVector(0.0, 1.0),
+            new ColVector(1.0, 0.0),
+            new ColVector(1.0, 1.0)
+        };
+        ColVector[] y = new ColVector[] {
+            new ColVector(1.0),
+            new ColVector(1.0),
+            new ColVector(1.0),
+            new ColVector(0.0),
+        };
 
         int maxEpochs = 100000;
         double learningRate = 0.01;

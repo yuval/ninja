@@ -19,6 +19,7 @@
 
 package com.basistech.ninja;
 
+import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -76,22 +77,19 @@ public class Network {
         return m.numRows() + " x " + m.numCols();
     }
 
-    static SimpleMatrix stripBiasUnit(SimpleMatrix m) {
-        SimpleMatrix result = new SimpleMatrix(m.numRows() - 1, 1);
+    static ColVector stripBiasUnit(ColVector vec) {
+        ColVector result = new ColVector(vec.numRows() - 1);
         for (int i = 0; i < result.numRows(); i++) {
-            result.set(i, 0, m.get(i + 1, 0));
+            result.set(i, vec.get(i + 1));
         }
         return result;
     }
 
-    static SimpleMatrix addBiasUnit(SimpleMatrix m) {
-        if (m.numCols() != 1) {
-            throw new IllegalArgumentException("Expected column vector, got " + Network.getDimensions(m));
-        }
-        SimpleMatrix result = new SimpleMatrix(m.numRows() + 1, 1);
-        result.set(0, 0, 1.0);
-        for (int i = 0; i < m.numRows(); i++) {
-            result.set(i + 1, 0, m.get(i, 0));
+    static ColVector addBiasUnit(ColVector vec) {
+        ColVector result = new ColVector(vec.numRows() + 1);
+        result.set(0, 1.0);
+        for (int i = 0; i < vec.numRows(); i++) {
+            result.set(i + 1, vec.get(i));
         }
         return result;
     }
@@ -131,14 +129,14 @@ public class Network {
         return w[layer].copy();
     }
 
-    public ForwardVectors feedForward(SimpleMatrix m) {
-        return feedForward(m.getMatrix().getData());
+    public ForwardVectors feedForward(ColVector vec) {
+        return feedForward(vec.getData());
     }
 
     public static class ForwardVectors {
-        SimpleMatrix[] z;
-        SimpleMatrix[] a;
-        ForwardVectors(SimpleMatrix[] z, SimpleMatrix[] a) {
+        ColVector[] z;
+        ColVector[] a;
+        ForwardVectors(ColVector[] z, ColVector[] a) {
             this.z = z;
             this.a = a;
         }
@@ -147,11 +145,11 @@ public class Network {
     // z[0] is always null
     public ForwardVectors feedForward(double ... values) {
         int layers = w.length + 1;
-        SimpleMatrix[] z = new SimpleMatrix[layers];
-        SimpleMatrix[] a = new SimpleMatrix[layers];
-        a[0] = Network.addBiasUnit(new SimpleMatrix(values.length, 1, true, values));
+        ColVector[] z = new ColVector[layers];
+        ColVector[] a = new ColVector[layers];
+        a[0] = Network.addBiasUnit(new ColVector(values));
         for (int l = 1; l < layers; l++) {
-            z[l] = w[l - 1].mult(a[l - 1]);
+            z[l] = ColVector.mult(w[l - 1], a[l - 1]);
             a[l] = Functions.apply(activationFunction, z[l]);
             if (l != layers - 1) {
                 a[l] = Network.addBiasUnit(a[l]);
@@ -160,21 +158,18 @@ public class Network {
         return new ForwardVectors(z, a);
     }
 
-    public SimpleMatrix apply(double ... values) {
+    public ColVector apply(double ... values) {
         return feedForward(values).a[getNumLayers() - 1];
     }
 
-    public SimpleMatrix apply(SimpleMatrix x) {
-        return apply(x.getMatrix().getData());
+    public ColVector apply(ColVector x) {
+        return apply(x.getData());
     }
 
     // TODO: The API would be simpler if instead we had 'List<Result> apply(SimpleMatrix m)'
-    public static List<Result> sort(SimpleMatrix vec) {
-        if (!vec.isVector()) {
-            throw new IllegalArgumentException("Expected row/column vector, got " + Network.getDimensions(vec));
-        }
+    public static List<Result> sort(ColVector vec) {
         List<Result> results = Lists.newArrayList();
-        double[] values = vec.getMatrix().getData();
+        double[] values = vec.getData();
         for (int i = 0; i < values.length; i++) {
             results.add(new Result(i, values[i]));
         }
@@ -184,22 +179,27 @@ public class Network {
     }
 
     // deltas[0] is always null
-    public SimpleMatrix[] backprop(ForwardVectors fv, SimpleMatrix y) {
+    public ColVector[] backprop(ForwardVectors fv, ColVector y) {
         int layers = getNumLayers();
-        SimpleMatrix[] deltas = new SimpleMatrix[layers];  // just don't use slot 0
+        ColVector[] deltas = new ColVector[layers];  // just don't use slot 0
         deltas[layers - 1] = fv.a[layers - 1].minus(y);
         for (int l = deltas.length - 2; l >= 1; l--) {
-            deltas[l] = w[l].transpose().mult(deltas[l + 1]).elementMult(
-                Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
+
+            SimpleMatrix t = w[l].transpose();
+            ColVector v = ColVector.mult(t, deltas[l + 1]);
+            deltas[l] = v.elementMult(Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
+
+//            deltas[l] = w[l].transpose().mult(deltas[l + 1]).elementMult(
+//                Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
+
             deltas[l] = Network.stripBiasUnit(deltas[l]);
         }
         return deltas;
     }
 
-    // every example in 'x' and 'y' should be a col vector
-    public void stochasticGD(SimpleMatrix x, SimpleMatrix y, double learningRate) {
-        if (x.numCols() != y.numCols()) {
-            throw new IllegalArgumentException("x and y must have the same number of columns!");
+    public void stochasticGD(ColVector[] x, ColVector[] y, double learningRate) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x and y must be the same length!");
         }
 
         // TODO: gradient checking
@@ -209,9 +209,8 @@ public class Network {
         }
     }
 
-    // every example in 'x' and 'y' should be a col vector
-    SimpleMatrix[] computeGradient(SimpleMatrix x, SimpleMatrix y) {
-        int numExamples = x.numCols();
+    SimpleMatrix[] computeGradient(ColVector[] x, ColVector[] y) {
+        int numExamples = x.length;
 
         SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
         for (int l = 0; l < getNumLayers() - 1; l++) {
@@ -219,10 +218,8 @@ public class Network {
         }
 
         for (int i = 0; i < numExamples; i++) {
-            SimpleMatrix xi = x.extractVector(false, i);
-            SimpleMatrix yi = y.extractVector(false, i);
-            ForwardVectors fv = feedForward(xi);
-            SimpleMatrix[] deltas = backprop(fv, yi);
+            ForwardVectors fv = feedForward(x[i]);
+            ColVector[] deltas = backprop(fv, y[i]);
             for (int l = 0; l < bigDelta.length; l++) {
                 bigDelta[l] = bigDelta[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
             }

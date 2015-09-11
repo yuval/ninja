@@ -19,6 +19,7 @@
 
 package com.basistech.ninja;
 
+import com.basistech.ninja.com.basistech.ninja.ejml.ColVector;
 import com.google.common.collect.Lists;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -26,7 +27,6 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,8 +35,8 @@ import java.util.List;
 public class Train {
     private final Network net;
     private final File examplesFile;
-    private SimpleMatrix x;
-    private SimpleMatrix y;
+    private ColVector[] x;
+    private ColVector[] y;
 
     Train(List<Integer> layerSizes, File examplesFile) {
         net = new Network(layerSizes);
@@ -58,12 +58,14 @@ public class Train {
         int inputNeurons = net.getNumNeurons(0);
         int outputNeurons = net.getNumNeurons(net.getNumLayers() - 1);
 
-        // each example is a col vector
-        x = new SimpleMatrix(inputNeurons, lines.size());
-        y = new SimpleMatrix(outputNeurons, lines.size());
+        x = new ColVector[lines.size()];
+        y = new ColVector[lines.size()];
 
         int lineno = 0;
         for (String line : lines) {
+            x[lineno] = new ColVector(inputNeurons);
+            y[lineno] = new ColVector(outputNeurons);
+
             // 1 1:1 2:1 5:1
             String[] fields = line.split("\\s+");
             int yval = Integer.valueOf(fields[0]);
@@ -76,7 +78,7 @@ public class Train {
                                 yval,
                                 outputNeurons));
             }
-            y.set(yval, lineno, 1.0);
+            y[lineno].set(yval, 1.0);
             for (int i = 1; i < fields.length; i++) {
                 String[] feature = fields[i].split(":");
                 int index = Integer.valueOf(feature[0]);
@@ -90,7 +92,7 @@ public class Train {
                                     index,
                                     inputNeurons));
                 }
-                x.set(index, lineno, value);
+                x[lineno].set(index, value);
             }
             lineno++;
         }
