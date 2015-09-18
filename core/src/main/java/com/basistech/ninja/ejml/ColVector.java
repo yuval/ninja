@@ -19,20 +19,21 @@
 
 package com.basistech.ninja.ejml;
 
+import com.basistech.ninja.NinjaMatrix;
 import org.ejml.simple.SimpleMatrix;
 
 public class ColVector {
-    private final SimpleMatrix data;
+    private final NinjaMatrix data;
 
     public ColVector(int rows) {
-        data = new SimpleMatrix(rows, 1);
+        data = new NinjaMatrix(rows, 1);
     }
 
     public ColVector(double... values) {
-        data = new SimpleMatrix(values.length, 1, true, values);
+        data = new NinjaMatrix(values.length, 1, true, values);
     }
 
-    public ColVector(SimpleMatrix matrix) {
+    public ColVector(NinjaMatrix matrix) {
         if (matrix.numCols() > 1) {
             throw new IllegalArgumentException("Matrix must be a column vector! (i.e., single column)");
         }
@@ -55,12 +56,15 @@ public class ColVector {
         data.set(row, value);
     }
 
-    public SimpleMatrix transpose() {
-        return data.transpose();
+    public NinjaMatrix transpose() {
+        // TODO: introduce RowVector
+        NinjaMatrix result = new NinjaMatrix(data.getMatrix());  //TODO: name?  getMatrix?
+        result.transpose();
+        return result;
     }
 
     public double[] getData() {
-        return data.getMatrix().getData();
+        return data.getData();
     }
 
     public ColVector minus(ColVector other) {

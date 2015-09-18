@@ -24,6 +24,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
+import org.ejml.data.DenseMatrix64F;
+import org.ejml.ops.CommonOps;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.BufferedReader;
@@ -207,22 +209,28 @@ public class Network {
     SimpleMatrix[] computeGradient(ColVector[] x, ColVector[] y) {
         int numExamples = x.length;
 
-        SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
+        //SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
+        DenseMatrix64F[] bigDelta = new DenseMatrix64F[getNumLayers() - 1];
         for (int l = 0; l < getNumLayers() - 1; l++) {
-            bigDelta[l] = new SimpleMatrix(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
+            //bigDelta[l] = new SimpleMatrix(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
+            bigDelta[l] = new DenseMatrix64F(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
         }
 
         for (int i = 0; i < numExamples; i++) {
             ForwardVectors fv = feedForward(x[i]);
             ColVector[] deltas = backprop(fv, y[i]);
             for (int l = 0; l < bigDelta.length; l++) {
-                bigDelta[l] = bigDelta[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
+                SimpleMatrix tmp = deltas[l + 1].mult(fv.a[l].transpose());
+                CommonOps.addEquals(bigDelta[l], tmp.getMatrix());
             }
         }
 
         SimpleMatrix[] grad = new SimpleMatrix[getNumLayers() - 1];
         for (int i = 0; i < getNumLayers() - 1; i++) {
-            grad[i] = bigDelta[i].divide(numExamples);
+            CommonOps.divide(bigDelta[i], numExamples);
+            grad[i] = new SimpleMatrix(bigDelta[i]);
+
+
         }
         return grad;
     }
