@@ -22,7 +22,6 @@ package com.basistech.ninja;
 import com.basistech.ninja.ejml.ColVector;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import org.ejml.simple.SimpleMatrix;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
@@ -56,7 +55,7 @@ public class NetworkTest {
 
     @Test
     public void testAnd() {
-        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
+        NinjaMatrix w1 = new NinjaMatrix(1, 3, true, -15, 10, 10);
         Network net = new Network(w1);
         assertTrue(isZero(net.apply(0, 0)));
         assertTrue(isZero(net.apply(0, 1)));
@@ -66,7 +65,7 @@ public class NetworkTest {
 
     @Test
     public void testOr() {
-        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 20, 20);
+        NinjaMatrix w1 = new NinjaMatrix(1, 3, true, -15, 20, 20);
         Network net = new Network(w1);
         assertTrue(isZero(net.apply(0, 0)));
         assertTrue(isOne(net.apply(0, 1)));
@@ -76,7 +75,7 @@ public class NetworkTest {
 
     @Test
     public void testNot() {
-        SimpleMatrix w1 = new SimpleMatrix(1, 2, true, 5, -10);
+        NinjaMatrix w1 = new NinjaMatrix(1, 2, true, 5, -10);
         Network net = new Network(w1);
         assertTrue(isOne(net.apply(0)));
         assertTrue(isZero(net.apply(1)));
@@ -84,7 +83,7 @@ public class NetworkTest {
 
     @Test
     public void testNand() {
-        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, 15, -10, -10);
+        NinjaMatrix w1 = new NinjaMatrix(1, 3, true, 15, -10, -10);
         Network net = new Network(w1);
         assertTrue(isOne(net.apply(0, 0)));
         assertTrue(isOne(net.apply(0, 1)));
@@ -94,8 +93,8 @@ public class NetworkTest {
 
     @Test
     public void testThreeLayerNand() {
-        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
-        SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
+        NinjaMatrix w1 = new NinjaMatrix(1, 3, true, -15, 10, 10);
+        NinjaMatrix w2 = new NinjaMatrix(1, 2, true, 5, -10);
         Network net = new Network(w1, w2);
         assertTrue(isOne(net.apply(0, 0)));
         assertTrue(isOne(net.apply(0, 1)));
@@ -105,8 +104,8 @@ public class NetworkTest {
 
     @Test
     public void testThreeLayerNandDeltas() {
-        SimpleMatrix w1 = new SimpleMatrix(1, 3, true, -15, 10, 10);
-        SimpleMatrix w2 = new SimpleMatrix(1, 2, true, 5, -10);
+        NinjaMatrix w1 = new NinjaMatrix(1, 3, true, -15, 10, 10);
+        NinjaMatrix w2 = new NinjaMatrix(1, 2, true, 5, -10);
 
         ColVector x = new ColVector(0.0, 0.0);
         ColVector y = new ColVector(1.0);
@@ -127,13 +126,13 @@ public class NetworkTest {
 
     @Test
     public void testFullthreeLayerDeltas() {
-        SimpleMatrix w1 = new SimpleMatrix(4, 4, true,
+        NinjaMatrix w1 = new NinjaMatrix(4, 4, true,
                 1, 2, 3, 4,
                 5, 6, 7, 8,
                 9, 10, 11, 12,
                 13, 14, 15, 16
         );
-        SimpleMatrix w2 = new SimpleMatrix(2, 5, true,
+        NinjaMatrix w2 = new NinjaMatrix(2, 5, true,
                 1, 2, 3, 4, 5,
                 -6, -7, -8, -9, -10
         );
@@ -193,13 +192,13 @@ public class NetworkTest {
         // array([[  557],
         //        [-1242]])
 
-        SimpleMatrix w2 = new SimpleMatrix(4, 4, true,
+        NinjaMatrix w2 = new NinjaMatrix(4, 4, true,
                 1, 2, 3, 4,
                 5, 6, 7, 8,
                 9, 10, 11, 12,
                 13, 14, 15, 16
         );
-        SimpleMatrix w3 = new SimpleMatrix(2, 5, true,
+        NinjaMatrix w3 = new NinjaMatrix(2, 5, true,
                 1, 2, 3, 4, 5,
                 -6, -7, -8, -9, -10
         );
@@ -234,13 +233,13 @@ public class NetworkTest {
         assertEquals(4, net.getNumNeurons(1));
         assertEquals(2, net.getNumNeurons(2));
 
-        SimpleMatrix w1 = new SimpleMatrix(4, 4, true,
+        NinjaMatrix w1 = new NinjaMatrix(4, 4, true,
                 1, 2, 3, 4,
                 5, 6, 7, 8,
                 9, 10, 11, 12,
                 13, 14, 15, 16
         );
-        SimpleMatrix w2 = new SimpleMatrix(2, 5, true,
+        NinjaMatrix w2 = new NinjaMatrix(2, 5, true,
                 1, 2, 3, 4, 5,
                 -6, -7, -8, -9, -10
         );
@@ -251,13 +250,13 @@ public class NetworkTest {
 
     @Test
     public void testWriteModel() throws Exception {
-        SimpleMatrix w1 = new SimpleMatrix(4, 4, true,
+        NinjaMatrix w1 = new NinjaMatrix(4, 4, true,
             1, 2, 3, 4,
             5, 6, 7, 8,
             9, 10, 11, 12,
             13, 14, 15, 16
         );
-        SimpleMatrix w2 = new SimpleMatrix(2, 5, true,
+        NinjaMatrix w2 = new NinjaMatrix(2, 5, true,
             1, 2, 3, 4, 5,
             -6, -7, -8, -9, -10
         );
@@ -277,13 +276,13 @@ public class NetworkTest {
 
     @Test
     public void testRandomInitialize() {
-        SimpleMatrix w1 = new SimpleMatrix(25, 401);
-        SimpleMatrix w2 = new SimpleMatrix(10, 26);
+        NinjaMatrix w1 = new NinjaMatrix(25, 401);
+        NinjaMatrix w2 = new NinjaMatrix(10, 26);
         Network net = new Network(w1, w2);
         net.randomInitialize();
 
         double epsilon = Math.sqrt(6) / Math.sqrt(400 + 25);
-        SimpleMatrix m = net.getWeightMatrix(0);
+        NinjaMatrix m = net.getWeightMatrix(0);
         for (int i = 0; i < m.numRows(); i++) {
             for (int j = 0; j < m.numCols(); j++) {
                 double weight = m.get(i, j);
@@ -303,8 +302,8 @@ public class NetworkTest {
 
     @Test
     public void testStochasticGD() {
-        SimpleMatrix w1 = new SimpleMatrix(1, 3);
-        SimpleMatrix w2 = new SimpleMatrix(1, 2);
+        NinjaMatrix w1 = new NinjaMatrix(1, 3);
+        NinjaMatrix w2 = new NinjaMatrix(1, 2);
         Network net = new Network(w1, w2);
         net.randomInitialize();
 

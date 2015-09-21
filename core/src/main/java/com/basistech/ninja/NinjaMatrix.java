@@ -20,6 +20,7 @@ package com.basistech.ninja;
 
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.CommonOps;
+import org.ejml.ops.MatrixFeatures;
 import org.ejml.ops.SpecializedOps;
 
 public class NinjaMatrix {
@@ -91,11 +92,14 @@ public class NinjaMatrix {
         CommonOps.scale(alpha, this.data);
     }
 
+    /**
+     * See {@link org.ejml.simple.SimpleBase#extractVector(boolean extractRow, int element)}
+     */
     public NinjaMatrix extractVector(boolean extractRow, int element) {
         int length = extractRow ? numCols() : numRows();
         NinjaMatrix result = extractRow ? new NinjaMatrix(1, length) : new NinjaMatrix(length, 1);
         if (extractRow) {
-            SpecializedOps.subvector(this.data, element, 0, length, true,0, result.data);
+            SpecializedOps.subvector(this.data, element, 0, length, true, 0, result.data);
         } else {
             SpecializedOps.subvector(this.data, 0, element, length, false, 0, result.data);
         }
@@ -106,6 +110,13 @@ public class NinjaMatrix {
         NinjaMatrix result = new NinjaMatrix(numRows(), numCols());
         result.data.set(this.data);
         return result;
+    }
+
+    /**
+     * See {@link org.ejml.simple.SimpleBase#isIdentical(org.ejml.simple.SimpleBase, double)}
+     */
+    public boolean isIdentical(NinjaMatrix other, double tol) {
+        return MatrixFeatures.isIdentical(this.data, other.data, tol);
     }
 
     @Override

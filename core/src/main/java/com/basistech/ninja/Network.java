@@ -119,6 +119,11 @@ public class Network {
         return layerSizes.get(layer);
     }
 
+    // 0-based
+    public NinjaMatrix getWeightMatrix(int layer) {
+        return w[layer].copy();
+    }
+
     public ForwardVectors feedForward(ColVector vec) {
         return feedForward(vec.getData());
     }
