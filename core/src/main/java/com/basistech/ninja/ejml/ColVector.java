@@ -20,7 +20,6 @@
 package com.basistech.ninja.ejml;
 
 import com.basistech.ninja.NinjaMatrix;
-import org.ejml.simple.SimpleMatrix;
 
 public class ColVector {
     private final NinjaMatrix data;
@@ -30,7 +29,7 @@ public class ColVector {
     }
 
     public ColVector(double... values) {
-        data = new NinjaMatrix(values.length, 1, true, values);
+        data = new NinjaMatrix(values.length, 1, false, values);
     }
 
     public ColVector(NinjaMatrix matrix) {
@@ -49,11 +48,11 @@ public class ColVector {
     }
 
     public double get(int row) {
-        return data.get(row);
+        return data.get(row, 0);
     }
 
     public void set(int row, double value) {
-        data.set(row, value);
+        data.set(row, 0, value);
     }
 
     public NinjaMatrix transpose() {
@@ -67,20 +66,24 @@ public class ColVector {
         return data.getData();
     }
 
-    public ColVector minus(ColVector other) {
-        return new ColVector(data.minus(other.data));
+    public void minus(ColVector other) {
+        data.minus(other.data);
     }
 
-    public ColVector elementMult(ColVector other) {
-        return new ColVector(data.elementMult(other.data));
+    public void elementMult(ColVector other) {
+        data.elementMult(other.data);
     }
 
-    public SimpleMatrix mult(SimpleMatrix matrix) {
+    public NinjaMatrix mult(NinjaMatrix matrix) {
         return this.data.mult(matrix);
     }
 
-    public static ColVector mult(SimpleMatrix matrix, ColVector vec) {
+    public static ColVector mult(NinjaMatrix matrix, ColVector vec) {
         return new ColVector(matrix.mult(vec.data));
+    }
+
+    public ColVector copy() {
+        return new ColVector(this.data.copy());
     }
 
     @Override

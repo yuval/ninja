@@ -24,8 +24,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.BufferedReader;
@@ -44,10 +42,10 @@ import java.util.Random;
 public class Network {
     private static final Random RANDOM = new Random(8723643324L);
     private final List<Integer> layerSizes;
-    private final SimpleMatrix[] w;
+    private final NinjaMatrix[] w;
     private final Function activationFunction = Functions.SIGMOID;
 
-    public Network(SimpleMatrix ... w) {
+    public Network(NinjaMatrix ... w) {
         this.w = w;
         layerSizes = updateLayerSizes();
     }
@@ -59,9 +57,9 @@ public class Network {
      */
     public Network(List<Integer> layerSizes) {
         this.layerSizes = layerSizes;
-        w = new SimpleMatrix[layerSizes.size() - 1];
+        w = new NinjaMatrix[layerSizes.size() - 1];
         for (int i = 0; i < w.length; i++) {
-            w[i] = new SimpleMatrix(layerSizes.get(i + 1), layerSizes.get(i) + 1);
+            w[i] = new NinjaMatrix(layerSizes.get(i + 1), layerSizes.get(i) + 1);
         }
         randomInitialize();
     }
@@ -127,9 +125,9 @@ public class Network {
     }
 
     // 0-based
-    public SimpleMatrix getWeightMatrix(int layer) {
-        return w[layer].copy();
-    }
+//    public SimpleMatrix getWeightMatrix(int layer) {
+//        return w[layer].copy();
+//    }
 
     public ForwardVectors feedForward(ColVector vec) {
         return feedForward(vec.getData());
@@ -184,12 +182,16 @@ public class Network {
     public ColVector[] backprop(ForwardVectors fv, ColVector y) {
         int layers = getNumLayers();
         ColVector[] deltas = new ColVector[layers];  // just don't use slot 0
-        deltas[layers - 1] = fv.a[layers - 1].minus(y);
+        // TODO: How to prevent copying without making it very hard to follow?
+        deltas[layers - 1] = fv.a[layers - 1].copy();
+        deltas[layers - 1].minus(y);
         for (int l = deltas.length - 2; l >= 1; l--) {
-            SimpleMatrix t = w[l].transpose();
+            // TODO: How to prevent copying? I don't think we can change w
+            NinjaMatrix t = w[l].copy();
+            t.transpose();
             ColVector v = ColVector.mult(t, deltas[l + 1]);
-            deltas[l] = v.elementMult(Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
-            deltas[l] = Network.stripBiasUnit(deltas[l]);
+            v.elementMult(Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
+            deltas[l] = Network.stripBiasUnit(v);
         }
         return deltas;
     }
@@ -198,47 +200,42 @@ public class Network {
         if (x.length != y.length) {
             throw new IllegalArgumentException("x and y must be the same length!");
         }
-
         // TODO: gradient checking
-        SimpleMatrix[] grad = computeGradient(x, y);
+        NinjaMatrix[] grad = computeGradient(x, y);
         for (int i = 0; i < w.length; i++) {
-            w[i] = w[i].minus(grad[i].scale(learningRate));
+            grad[i].scale(learningRate);
+            w[i].minus(grad[i]);
         }
     }
 
-    SimpleMatrix[] computeGradient(ColVector[] x, ColVector[] y) {
+    NinjaMatrix[] computeGradient(ColVector[] x, ColVector[] y) {
         int numExamples = x.length;
 
-        //SimpleMatrix[] bigDelta = new SimpleMatrix[getNumLayers() - 1];
-        DenseMatrix64F[] bigDelta = new DenseMatrix64F[getNumLayers() - 1];
+        NinjaMatrix[] bigDelta = new NinjaMatrix[getNumLayers() - 1];
         for (int l = 0; l < getNumLayers() - 1; l++) {
-            //bigDelta[l] = new SimpleMatrix(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
-            bigDelta[l] = new DenseMatrix64F(getWeightMatrix(l).numRows(), getWeightMatrix(l).numCols());
+            bigDelta[l] = new NinjaMatrix(w[l].numRows(), w[l].numCols());
         }
 
         for (int i = 0; i < numExamples; i++) {
             ForwardVectors fv = feedForward(x[i]);
             ColVector[] deltas = backprop(fv, y[i]);
             for (int l = 0; l < bigDelta.length; l++) {
-                SimpleMatrix tmp = deltas[l + 1].mult(fv.a[l].transpose());
-                CommonOps.addEquals(bigDelta[l], tmp.getMatrix());
+                bigDelta[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
             }
         }
 
-        SimpleMatrix[] grad = new SimpleMatrix[getNumLayers() - 1];
         for (int i = 0; i < getNumLayers() - 1; i++) {
-            CommonOps.divide(bigDelta[i], numExamples);
-            grad[i] = new SimpleMatrix(bigDelta[i]);
-
-
+            // this is the gradient
+            bigDelta[i].divide(numExamples);
         }
-        return grad;
+
+        return bigDelta;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (SimpleMatrix m : w) {
+        for (NinjaMatrix m : w) {
             sb.append(m.toString());
         }
         return sb.toString();
@@ -276,11 +273,11 @@ public class Network {
             }
         }
 
-        SimpleMatrix[] w = new SimpleMatrix[numLayers - 1];
+        NinjaMatrix[] w = new NinjaMatrix[numLayers - 1];
         for (int l = 1; l < numLayers; l++) {
             int rows = layerSizes.get(l);
             int cols = layerSizes.get(l - 1) + 1;
-            SimpleMatrix m = new SimpleMatrix(rows, cols);
+            NinjaMatrix m = new NinjaMatrix(rows, cols);
             int row = 0;
             while (row < rows) {
                 line = br.readLine();
@@ -319,10 +316,10 @@ public class Network {
         writer.write("w");
         writer.newLine();
         writer.newLine();
-        for (SimpleMatrix m : w) {
+        for (NinjaMatrix m : w) {
             for (int i = 0; i < m.numRows(); i++) {
-                SimpleMatrix row = m.extractVector(true, i);
-                writer.write(Joiner.on(' ').join(Doubles.asList(row.getMatrix().getData())));
+                NinjaMatrix row = m.extractVector(true, i);
+                writer.write(Joiner.on(' ').join(Doubles.asList(row.getData())));
                 writer.newLine();
             }
             writer.newLine();

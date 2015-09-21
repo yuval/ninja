@@ -20,6 +20,7 @@ package com.basistech.ninja;
 
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.CommonOps;
+import org.ejml.ops.SpecializedOps;
 
 public class NinjaMatrix {
     private DenseMatrix64F data;
@@ -30,6 +31,10 @@ public class NinjaMatrix {
 
     public NinjaMatrix(DenseMatrix64F matrix) {
         this.data = matrix;
+    }
+
+    public NinjaMatrix(int numRows, int numCols, boolean rowMajor, double... data) {
+        this.data = new DenseMatrix64F(numRows, numCols, rowMajor, data);
     }
 
     public DenseMatrix64F getMatrix() {
@@ -44,12 +49,12 @@ public class NinjaMatrix {
         return data.numCols;
     }
 
-    public double get(int row) {
-        return data.get(row);
+    public double get(int row, int col) {
+        return data.get(row, col);
     }
 
-    public void set(int row, double value) {
-        data.set(row, value);
+    public void set(int row, int col, double value) {
+        data.set(row, col, value);
     }
 
     public void transpose() {
@@ -76,6 +81,31 @@ public class NinjaMatrix {
         DenseMatrix64F result = new DenseMatrix64F(data.numRows, other.numCols());
         CommonOps.mult(this.data, other.data, result);
         return new NinjaMatrix(result);
+    }
+
+    public void divide(double val) {
+        CommonOps.divide(this.data, val);
+    }
+
+    public void scale(double alpha) {
+        CommonOps.scale(alpha, this.data);
+    }
+
+    public NinjaMatrix extractVector(boolean extractRow, int element) {
+        int length = extractRow ? numCols() : numRows();
+        NinjaMatrix result = extractRow ? new NinjaMatrix(1, length) : new NinjaMatrix(length, 1);
+        if (extractRow) {
+            SpecializedOps.subvector(this.data, element, 0, length, true,0, result.data);
+        } else {
+            SpecializedOps.subvector(this.data, 0, element, length, false, 0, result.data);
+        }
+        return result;
+    }
+
+    public NinjaMatrix copy() {
+        NinjaMatrix result = new NinjaMatrix(numRows(), numCols());
+        result.data.set(this.data);
+        return result;
     }
 
     @Override
