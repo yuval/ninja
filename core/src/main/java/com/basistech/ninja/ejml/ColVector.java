@@ -25,7 +25,7 @@ public class ColVector {
     private final NinjaMatrix data;
 
     public ColVector(int rows) {
-        data = new NinjaMatrix(rows, 1);
+        this(new double[rows]);
     }
 
     public ColVector(double... values) {
