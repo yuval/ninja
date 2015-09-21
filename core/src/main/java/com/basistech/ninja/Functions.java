@@ -20,7 +20,6 @@
 package com.basistech.ninja;
 
 import com.basistech.ninja.ejml.ColVector;
-import org.ejml.simple.SimpleMatrix;
 
 public final class Functions {
     static final Function IDENTITY = new Identity();
@@ -48,16 +47,6 @@ public final class Functions {
             double sigmoid = SIGMOID.apply(x);
             return sigmoid * (1.0 - sigmoid);
         }
-    }
-
-    public static SimpleMatrix apply(Function f, SimpleMatrix m) {
-        SimpleMatrix result = new SimpleMatrix(m.numRows(), m.numCols());
-        for (int i = 0; i < m.numRows(); i++) {
-            for (int j = 0; j < m.numCols(); j++) {
-                result.set(i, j, f.apply(m.get(i, j)));
-            }
-        }
-        return result;
     }
 
     public static ColVector apply(Function f, ColVector vec) {
