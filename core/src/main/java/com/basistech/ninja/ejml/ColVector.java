@@ -19,20 +19,20 @@
 
 package com.basistech.ninja.ejml;
 
-import org.ejml.simple.SimpleMatrix;
+import com.basistech.ninja.NinjaMatrix;
 
 public class ColVector {
-    private final SimpleMatrix data;
+    private final NinjaMatrix data;
 
     public ColVector(int rows) {
-        data = new SimpleMatrix(rows, 1);
+        data = new NinjaMatrix(rows, 1);
     }
 
     public ColVector(double... values) {
-        data = new SimpleMatrix(values.length, 1, true, values);
+        data = new NinjaMatrix(values.length, 1, false, values);
     }
 
-    public ColVector(SimpleMatrix matrix) {
+    public ColVector(NinjaMatrix matrix) {
         if (matrix.numCols() > 1) {
             throw new IllegalArgumentException("Matrix must be a column vector! (i.e., single column)");
         }
@@ -48,35 +48,42 @@ public class ColVector {
     }
 
     public double get(int row) {
-        return data.get(row);
+        return data.get(row, 0);
     }
 
     public void set(int row, double value) {
-        data.set(row, value);
+        data.set(row, 0, value);
     }
 
-    public SimpleMatrix transpose() {
-        return data.transpose();
+    public NinjaMatrix transpose() {
+        // TODO: introduce RowVector
+        NinjaMatrix result = new NinjaMatrix(data.getMatrix());  //TODO: name?  getMatrix?
+        result.transpose();
+        return result;
     }
 
     public double[] getData() {
-        return data.getMatrix().getData();
+        return data.getData();
     }
 
-    public ColVector minus(ColVector other) {
-        return new ColVector(data.minus(other.data));
+    public void minus(ColVector other) {
+        data.minus(other.data);
     }
 
-    public ColVector elementMult(ColVector other) {
-        return new ColVector(data.elementMult(other.data));
+    public void elementMult(ColVector other) {
+        data.elementMult(other.data);
     }
 
-    public SimpleMatrix mult(SimpleMatrix matrix) {
+    public NinjaMatrix mult(NinjaMatrix matrix) {
         return this.data.mult(matrix);
     }
 
-    public static ColVector mult(SimpleMatrix matrix, ColVector vec) {
+    public static ColVector mult(NinjaMatrix matrix, ColVector vec) {
         return new ColVector(matrix.mult(vec.data));
+    }
+
+    public ColVector copy() {
+        return new ColVector(this.data.copy());
     }
 
     @Override
