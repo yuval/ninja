@@ -24,7 +24,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
-import org.ejml.simple.SimpleMatrix;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -71,10 +70,6 @@ public class Network {
             result.add(layerSize);
         }
         return result;
-    }
-
-    static String getDimensions(SimpleMatrix m) {
-        return m.numRows() + " x " + m.numCols();
     }
 
     static ColVector stripBiasUnit(ColVector vec) {
@@ -124,11 +119,6 @@ public class Network {
         return layerSizes.get(layer);
     }
 
-    // 0-based
-//    public SimpleMatrix getWeightMatrix(int layer) {
-//        return w[layer].copy();
-//    }
-
     public ForwardVectors feedForward(ColVector vec) {
         return feedForward(vec.getData());
     }
@@ -166,7 +156,7 @@ public class Network {
         return apply(x.getData());
     }
 
-    // TODO: The API would be simpler if instead we had 'List<Result> apply(SimpleMatrix m)'
+    // TODO: The API would be simpler if instead we had 'List<Result> apply(ColVector vec)'
     public static List<Result> sort(ColVector vec) {
         List<Result> results = Lists.newArrayList();
         double[] values = vec.getData();
