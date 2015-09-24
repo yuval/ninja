@@ -78,11 +78,11 @@ public class Train {
                                 yval,
                                 outputNeurons));
             }
-            y[lineno].set(yval, 1.0);
+            y[lineno].set(yval, 1F);
             for (int i = 1; i < fields.length; i++) {
                 String[] feature = fields[i].split(":");
                 int index = Integer.valueOf(feature[0]);
-                double value = Double.valueOf(feature[1]);
+                float value = Float.valueOf(feature[1]);
                 if (index < 0 || index >= inputNeurons) {
                     // TODO: Fix bogus lineno
                     throw new RuntimeException(

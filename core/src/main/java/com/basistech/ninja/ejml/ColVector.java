@@ -25,10 +25,10 @@ public class ColVector {
     private final NinjaMatrix data;
 
     public ColVector(int rows) {
-        this(new double[rows]);
+        this(new float[rows]);
     }
 
-    public ColVector(double... values) {
+    public ColVector(float... values) {
         data = new NinjaMatrix(values.length, 1, false, values);
     }
 
@@ -47,11 +47,11 @@ public class ColVector {
         return data.numCols();
     }
 
-    public double get(int row) {
+    public float get(int row) {
         return data.get(row, 0);
     }
 
-    public void set(int row, double value) {
+    public void set(int row, float value) {
         data.set(row, 0, value);
     }
 
@@ -62,7 +62,7 @@ public class ColVector {
         return result;
     }
 
-    public double[] getData() {
+    public float[] getData() {
         return data.getData();
     }
 

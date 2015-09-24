@@ -23,7 +23,7 @@ import com.basistech.ninja.ejml.ColVector;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Floats;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -82,7 +82,7 @@ public class Network {
 
     static ColVector addBiasUnit(ColVector vec) {
         ColVector result = new ColVector(vec.numRows() + 1);
-        result.set(0, 1.0);
+        result.set(0, 1F);
         for (int i = 0; i < vec.numRows(); i++) {
             result.set(i + 1, vec.get(i));
         }
@@ -98,7 +98,7 @@ public class Network {
         for (int i = 0; i < w[layer].numRows(); i++) {
             for (int j = 0; j < w[layer].numCols(); j++) {
                 double value = RANDOM.nextDouble() * 2 * epsilon - epsilon;
-                w[layer].set(i, j, value);
+                w[layer].set(i, j, (float) value);
             }
         }
     }
@@ -138,7 +138,7 @@ public class Network {
     }
 
     // z[0] is always null
-    public ForwardVectors feedForward(double ... values) {
+    public ForwardVectors feedForward(float ... values) {
         int layers = w.length + 1;
         ColVector[] z = new ColVector[layers];
         ColVector[] a = new ColVector[layers];
@@ -153,7 +153,7 @@ public class Network {
         return new ForwardVectors(z, a);
     }
 
-    public ColVector apply(double ... values) {
+    public ColVector apply(float ... values) {
         return feedForward(values).a[getNumLayers() - 1];
     }
 
@@ -164,7 +164,7 @@ public class Network {
     // TODO: The API would be simpler if instead we had 'List<Result> apply(ColVector vec)'
     public static List<Result> sort(ColVector vec) {
         List<Result> results = Lists.newArrayList();
-        double[] values = vec.getData();
+        float[] values = vec.getData();
         for (int i = 0; i < values.length; i++) {
             results.add(new Result(i, values[i]));
         }
@@ -198,7 +198,7 @@ public class Network {
         // TODO: gradient checking
         NinjaMatrix[] grad = computeGradient(x, y);
         for (int i = 0; i < w.length; i++) {
-            grad[i].scale(learningRate);
+            grad[i].scale((float) learningRate);
             w[i].minus(grad[i]);
         }
     }
@@ -288,7 +288,7 @@ public class Network {
                     throw new RuntimeException("wrong number of columns");
                 }
                 for (int j = 0; j < cols; j++) {
-                    m.set(row, j, Double.parseDouble(fields[j]));
+                    m.set(row, j, (float) Double.parseDouble(fields[j]));
                 }
                 row++;
             }
@@ -314,7 +314,7 @@ public class Network {
         for (NinjaMatrix m : w) {
             for (int i = 0; i < m.numRows(); i++) {
                 NinjaMatrix row = m.extractVector(true, i);
-                writer.write(Joiner.on(' ').join(Doubles.asList(row.getData())));
+                writer.write(Joiner.on(' ').join(Floats.asList(row.getData())));
                 writer.newLine();
             }
             writer.newLine();

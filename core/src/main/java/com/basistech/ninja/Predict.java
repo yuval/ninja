@@ -72,7 +72,7 @@ public class Predict {
                 for (int i = 1; i < fields.length; i++) {
                     String[] feature = fields[i].split(":");
                     int index = Integer.valueOf(feature[0]);
-                    double value = Double.valueOf(feature[1]);
+                    float value = Float.valueOf(feature[1]);
                     if (index < 0 || index >= inputNeurons) {
                         throw new RuntimeException(
                             String.format(

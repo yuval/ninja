@@ -31,21 +31,21 @@ public final class Functions {
     }
 
     private static class Identity implements Function {
-        public double apply(double x) {
+        public float apply(float x) {
             return x;
         }
     }
 
     private static class Sigmoid implements Function {
-        public double apply(double x) {
-            return 1.0 / (1 + Math.exp(-x));
+        public float apply(float x) {
+            return (float) (1.0 / (1 + Math.exp(-x)));
         }
     }
 
     private static class SigmoidPrime implements Function {
-        public double apply(double x) {
-            double sigmoid = SIGMOID.apply(x);
-            return sigmoid * (1.0 - sigmoid);
+        public float apply(float x) {
+            float sigmoid = SIGMOID.apply(x);
+            return sigmoid * (1F - sigmoid);
         }
     }
 
