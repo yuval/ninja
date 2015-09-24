@@ -74,8 +74,12 @@ public class ColVector {
         data.elementMult(other.data);
     }
 
-    public NinjaMatrix mult(NinjaMatrix matrix) {
-        return this.data.mult(matrix);
+    public NinjaMatrix mult(NinjaMatrix other) {
+        return this.data.mult(other);
+    }
+
+    public void mult(NinjaMatrix other, NinjaMatrix result) {
+        this.data.mult(other, result);
     }
 
     public static ColVector mult(NinjaMatrix matrix, ColVector vec) {

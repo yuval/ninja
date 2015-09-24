@@ -79,9 +79,13 @@ public class NinjaMatrix {
     }
 
     public NinjaMatrix mult(NinjaMatrix other) {
-        DenseMatrix64F result = new DenseMatrix64F(data.numRows, other.numCols());
-        CommonOps.mult(this.data, other.data, result);
-        return new NinjaMatrix(result);
+        NinjaMatrix result = new NinjaMatrix(data.numRows, other.numCols());
+        mult(other, result);
+        return result;
+    }
+
+    public void mult(NinjaMatrix other, NinjaMatrix result) {
+        CommonOps.mult(this.data, other.data, result.data);
     }
 
     public void divide(double val) {

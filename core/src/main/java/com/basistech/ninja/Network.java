@@ -44,9 +44,13 @@ public class Network {
     private final NinjaMatrix[] w;
     private final Function activationFunction = Functions.SIGMOID;
 
+    private NinjaMatrix[] grad;
+    private NinjaMatrix[] deltaGrad;
+
     public Network(NinjaMatrix ... w) {
         this.w = w;
         layerSizes = updateLayerSizes();
+        initWorkspace();
     }
 
     /**
@@ -61,6 +65,16 @@ public class Network {
             w[i] = new NinjaMatrix(layerSizes.get(i + 1), layerSizes.get(i) + 1);
         }
         randomInitialize();
+        initWorkspace();
+    }
+
+    private void initWorkspace() {
+        grad = new NinjaMatrix[getNumLayers() - 1];
+        deltaGrad = new NinjaMatrix[grad.length];
+        for (int l = 0; l < getNumLayers() - 1; l++) {
+            grad[l] = new NinjaMatrix(w[l].numRows(), w[l].numCols());
+            deltaGrad[l] = new NinjaMatrix(w[l].numRows(), w[l].numCols());
+        }
     }
 
     private List<Integer> updateLayerSizes() {
@@ -124,10 +138,6 @@ public class Network {
         return w[layer].copy();
     }
 
-    public ForwardVectors feedForward(ColVector vec) {
-        return feedForward(vec.getData());
-    }
-
     public static class ForwardVectors {
         ColVector[] z;
         ColVector[] a;
@@ -135,6 +145,10 @@ public class Network {
             this.z = z;
             this.a = a;
         }
+    }
+
+    public ForwardVectors feedForward(ColVector vec) {
+        return feedForward(vec.getData());
     }
 
     // z[0] is always null
@@ -195,36 +209,28 @@ public class Network {
         if (x.length != y.length) {
             throw new IllegalArgumentException("x and y must be the same length!");
         }
-        // TODO: gradient checking
-        NinjaMatrix[] grad = computeGradient(x, y);
+        computeGradient(x, y);
         for (int i = 0; i < w.length; i++) {
             grad[i].scale(learningRate);
             w[i].minus(grad[i]);
         }
     }
 
-    NinjaMatrix[] computeGradient(ColVector[] x, ColVector[] y) {
+    void computeGradient(ColVector[] x, ColVector[] y) {
         int numExamples = x.length;
-
-        NinjaMatrix[] bigDelta = new NinjaMatrix[getNumLayers() - 1];
-        for (int l = 0; l < getNumLayers() - 1; l++) {
-            bigDelta[l] = new NinjaMatrix(w[l].numRows(), w[l].numCols());
-        }
-
         for (int i = 0; i < numExamples; i++) {
             ForwardVectors fv = feedForward(x[i]);
             ColVector[] deltas = backprop(fv, y[i]);
-            for (int l = 0; l < bigDelta.length; l++) {
-                bigDelta[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
+            for (int l = 0; l < grad.length; l++) {
+                //grad[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
+                NinjaMatrix transposed = fv.a[l].transpose();
+                deltas[l + 1].mult(transposed, deltaGrad[l]);
+                grad[l].plus(deltaGrad[l]);
             }
         }
-
         for (int i = 0; i < getNumLayers() - 1; i++) {
-            // this is the gradient
-            bigDelta[i].divide(numExamples);
+            grad[i].divide(numExamples);
         }
-
-        return bigDelta;
     }
 
     @Override
