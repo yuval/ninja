@@ -86,6 +86,10 @@ public class ColVector {
         return new ColVector(matrix.mult(vec.data));
     }
 
+    public static void mult(NinjaMatrix matrix, ColVector vec, ColVector result) {
+        matrix.mult(vec.data, result.data);
+    }
+
     public ColVector copy() {
         return new ColVector(this.data.copy());
     }

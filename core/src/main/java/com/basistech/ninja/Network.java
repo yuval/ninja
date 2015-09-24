@@ -43,9 +43,9 @@ public class Network {
     private final List<Integer> layerSizes;
     private final NinjaMatrix[] w;
     private final Function activationFunction = Functions.SIGMOID;
-
     private NinjaMatrix[] grad;
     private NinjaMatrix[] deltaGrad;
+    private ForwardVectors forwardVectors;
 
     public Network(NinjaMatrix ... w) {
         this.w = w;
@@ -75,6 +75,11 @@ public class Network {
             grad[l] = new NinjaMatrix(w[l].numRows(), w[l].numCols());
             deltaGrad[l] = new NinjaMatrix(w[l].numRows(), w[l].numCols());
         }
+
+        int layers = w.length + 1;
+        forwardVectors = new ForwardVectors(
+            new ColVector[layers],
+            new ColVector[layers]);
     }
 
     private List<Integer> updateLayerSizes() {
@@ -138,37 +143,43 @@ public class Network {
         return w[layer].copy();
     }
 
-    public static class ForwardVectors {
+    public class ForwardVectors {
         ColVector[] z;
         ColVector[] a;
         ForwardVectors(ColVector[] z, ColVector[] a) {
             this.z = z;
             this.a = a;
+
+            // z[0] is always null
+            int layers = z.length;
+            for (int l = 1; l < layers; l++) {
+                this.a[l - 1] = new ColVector(w[l - 1].numCols());
+                this.z[l] = new ColVector(w[l - 1].numRows());
+            }
         }
     }
 
-    public ForwardVectors feedForward(ColVector vec) {
-        return feedForward(vec.getData());
+    public void feedForward(ColVector vec) {
+        feedForward(vec.getData());
     }
 
     // z[0] is always null
-    public ForwardVectors feedForward(double ... values) {
+    public void feedForward(double ... values) {
         int layers = w.length + 1;
-        ColVector[] z = new ColVector[layers];
-        ColVector[] a = new ColVector[layers];
-        a[0] = Network.addBiasUnit(new ColVector(values));
+        forwardVectors.a[0] = Network.addBiasUnit(new ColVector(values));
         for (int l = 1; l < layers; l++) {
-            z[l] = ColVector.mult(w[l - 1], a[l - 1]);
-            a[l] = Functions.apply(activationFunction, z[l]);
+            ColVector.mult(w[l - 1], forwardVectors.a[l - 1], forwardVectors.z[l]);
+            forwardVectors.a[l] = Functions.apply(activationFunction, forwardVectors.z[l]);
             if (l != layers - 1) {
-                a[l] = Network.addBiasUnit(a[l]);
+                forwardVectors.a[l] = Network.addBiasUnit(forwardVectors.a[l]);
             }
         }
-        return new ForwardVectors(z, a);
     }
 
     public ColVector apply(double ... values) {
-        return feedForward(values).a[getNumLayers() - 1];
+        //return feedForward(values).a[getNumLayers() - 1];
+        feedForward(values);
+        return forwardVectors.a[getNumLayers() - 1];
     }
 
     public ColVector apply(ColVector x) {
@@ -188,18 +199,18 @@ public class Network {
     }
 
     // deltas[0] is always null
-    public ColVector[] backprop(ForwardVectors fv, ColVector y) {
+    public ColVector[] backprop(ColVector y) {
         int layers = getNumLayers();
         ColVector[] deltas = new ColVector[layers];  // just don't use slot 0
         // TODO: How to prevent copying without making it very hard to follow?
-        deltas[layers - 1] = fv.a[layers - 1].copy();
+        deltas[layers - 1] = forwardVectors.a[layers - 1].copy();
         deltas[layers - 1].minus(y);
         for (int l = deltas.length - 2; l >= 1; l--) {
             // TODO: How to prevent copying? I don't think we can change w
             NinjaMatrix t = w[l].copy();
             t.transpose();
             ColVector v = ColVector.mult(t, deltas[l + 1]);
-            v.elementMult(Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(fv.z[l])));
+            v.elementMult(Functions.apply(Functions.SIGMOID_PRIME, Network.addBiasUnit(forwardVectors.z[l])));
             deltas[l] = Network.stripBiasUnit(v);
         }
         return deltas;
@@ -219,11 +230,11 @@ public class Network {
     void computeGradient(ColVector[] x, ColVector[] y) {
         int numExamples = x.length;
         for (int i = 0; i < numExamples; i++) {
-            ForwardVectors fv = feedForward(x[i]);
-            ColVector[] deltas = backprop(fv, y[i]);
+            feedForward(x[i]);
+            ColVector[] deltas = backprop(y[i]);
             for (int l = 0; l < grad.length; l++) {
                 //grad[l].plus(deltas[l + 1].mult(fv.a[l].transpose()));
-                NinjaMatrix transposed = fv.a[l].transpose();
+                NinjaMatrix transposed = forwardVectors.a[l].transpose();
                 deltas[l + 1].mult(transposed, deltaGrad[l]);
                 grad[l].plus(deltaGrad[l]);
             }

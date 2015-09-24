@@ -18,27 +18,28 @@
  */
 package com.basistech.ninja;
 
+import org.ejml.data.DenseMatrix32F;
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.CommonOps;
 import org.ejml.ops.MatrixFeatures;
 import org.ejml.ops.SpecializedOps;
 
 public class NinjaMatrix {
-    private DenseMatrix64F data;
-    
+    private DenseMatrix32F data;
+
     public NinjaMatrix(int rows, int cols) {
         data = new DenseMatrix64F(rows, cols);
     }
 
-    public NinjaMatrix(DenseMatrix64F matrix) {
+    public NinjaMatrix(DenseMatrix32F matrix) {
         this.data = matrix;
     }
 
     public NinjaMatrix(int numRows, int numCols, boolean rowMajor, double... data) {
-        this.data = new DenseMatrix64F(numRows, numCols, rowMajor, data);
+        this.data = new DenseMatrix32F(numRows, numCols, rowMajor, data);
     }
 
-    public DenseMatrix64F getMatrix() {
+    public DenseMatrix32F getMatrix() {
         return data;
     }
 
