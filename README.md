@@ -182,9 +182,9 @@ e.g. number epochs, learning-rate, etc.
 Authors
 -------
 
-[Yuval Merhav|https://github.com/yuval/]
+[Yuval Merhav](https://github.com/yuval/)
 
-[Joel Barry|https://github.com/joelb-git/]
+[Joel Barry](https://github.com/joelb-git/)
 
 License
 -------
