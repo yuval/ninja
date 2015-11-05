@@ -45,15 +45,15 @@ public class Predict {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
-            System.err.println("Usage: Predict model examples response");
+        if (args.length != 3 && args.length != 4) {
+            System.err.println("Usage: Predict model examples response [--verbose]");
             System.exit(1);
         }
 
         Network net = Network.fromText(new File(args[0]));
         File examplesFile = new File(args[1]);
         File responseFile = new File(args[2]);
-
+        boolean verbose = args.length == 4 && args[3].equalsIgnoreCase("--verbose");
         Predict that = new Predict(net);
 
         int inputNeurons = net.getNumNeurons(0);
@@ -84,9 +84,18 @@ public class Predict {
                     x.set(index, value);
                 }
 
-                Result result = that.predict(x).get(0);
-                writer.write(String.valueOf(result.getId()));
+                List<Result> results = that.predict(x);
+                String prediction = String.valueOf(results.get(0).getId());
+                writer.append(prediction);
+                writer.append('\t');
+                writer.append(String.format("%f", results.get(0).getScore()));
                 writer.newLine();
+                if (verbose) {
+                    for (Result result : results) {
+                        writer.append(String.format("\t%f\t%s", result.getScore(), result.getId()));
+                        writer.newLine();
+                    }
+                }
                 lineno++;
             }
         }
