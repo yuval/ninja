@@ -19,8 +19,10 @@
 
 package com.basistech.ninja.ejml;
 
-import com.basistech.ninja.NinjaMatrix;
-
+/**
+ * {@code ColVector} is a vector with a single column. It's implemented as a
+ * {@code NinjaMatrix} with a single column.
+ */
 public class ColVector {
     private final NinjaMatrix data;
 

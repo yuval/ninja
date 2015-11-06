@@ -19,6 +19,9 @@
 
 package com.basistech.ninja;
 
+/**
+ * {@code Function} represents a function on a double returning a double.
+ */
 public interface Function {
     double apply(double x);
 }

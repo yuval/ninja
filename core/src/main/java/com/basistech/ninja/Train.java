@@ -32,6 +32,26 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Command line driver for training a neural network given an examples file in
+ * the following format:
+ *
+ * <ul>
+ *  <li> one example per line
+ *  <li> fields are separated by a space
+ *  <li> first field is an integer label
+ *  <li> remaining fields are of the form feature:value, where feature is an integer and
+ *       value is a floating point number feature indexes start at 0
+ * </ul>
+ * For example, here are the first few lines of the sample training data:
+ *
+ * <pre>
+ *  $ head -n3 samples/data/mnist/examples.train
+ *  6 0:0.0 1:0.0 ...  99:0.09375000 ... 783:0.0
+ *  2 0:0.0 1:0.0 ... 151:0.26171875 ... 783:0.0
+ *  3 0:0.0 1:0.0 ... 152:0.99609375 ... 783:0.0
+ * </pre>
+ */
 public class Train {
     private final Network net;
     private final File examplesFile;
@@ -48,15 +68,15 @@ public class Train {
             System.out.println("Epoch: " + (i + 1));
             for (List<String> batch : new ExamplesIterator(examplesFile, batchSize)) {
                 parseExamples(batch);
-                net.stochasticGD(x, y, learningRate);
+                net.trainBatch(x, y, learningRate);
             }
         }
         net.writeModel(modelFile);
     }
 
     void parseExamples(List<String> lines) throws IOException {
-        int inputNeurons = net.getNumNeurons(0);
-        int outputNeurons = net.getNumNeurons(net.getNumLayers() - 1);
+        int inputNeurons = net.getNumUnits(0);
+        int outputNeurons = net.getNumUnits(net.getNumLayers() - 1);
 
         x = new ColVector[lines.size()];
         y = new ColVector[lines.size()];
@@ -104,6 +124,23 @@ public class Train {
         formatter.printHelp("Train [options]", options);
         System.out.println();
     }
+
+    /**
+     * Command line interface to train a model.
+     *
+     * <pre>
+     *  usage: Train [options]
+     *  --batch-size <arg>      batch size (default = 10)
+     *  --epochs <arg>          epochs (default = 5)
+     *  --examples <arg>        input examples file (required)
+     *  --layer-sizes <arg>     layer sizes, including input/output, e.g. 3 4 2 (required)
+     *  --learning-rate <arg>   learning-rate (default = 0.7)
+     *  --model <arg>           output model file (required)
+     * </pre>
+     *
+     * @param args command line arguments
+     * @throws IOException
+     */
     public static void main(String[] args) throws IOException {
         String defaultBatchSize = "10";
         String deafaultEpochs = "5";

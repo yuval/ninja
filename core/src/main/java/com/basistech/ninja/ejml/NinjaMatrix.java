@@ -16,21 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.basistech.ninja;
+package com.basistech.ninja.ejml;
 
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.ops.CommonOps;
 import org.ejml.ops.MatrixFeatures;
 import org.ejml.ops.SpecializedOps;
 
+/**
+ * {@code NinjaMatrix} is a matrix of doubles. The current implementation uses a
+ * dense representation. The underlying implementation is based on
+ * <a "href=http://ejml.org/javadoc/org/ejml/data/DenseMatrix64F.html">EJML's DenseMatrix64F</a>.
+ */
 public class NinjaMatrix {
     private DenseMatrix64F data;
-    
+
     public NinjaMatrix(int rows, int cols) {
         data = new DenseMatrix64F(rows, cols);
     }
 
-    public NinjaMatrix(DenseMatrix64F matrix) {
+    NinjaMatrix(DenseMatrix64F matrix) {
         this.data = matrix;
     }
 
@@ -38,7 +43,7 @@ public class NinjaMatrix {
         this.data = new DenseMatrix64F(numRows, numCols, rowMajor, data);
     }
 
-    public DenseMatrix64F getMatrix() {
+    DenseMatrix64F getMatrix() {
         return data;
     }
 

@@ -21,19 +21,32 @@ package com.basistech.ninja;
 
 import com.google.common.base.Objects;
 
+/**
+ * {@code Result} represents the score of an output node.
+ */
 public class Result implements Comparable<Result> {
-    private final int id;
+    private final int index;
     private final double score;
 
-    public Result(int id, double score) {
-        this.id = id;
+    Result(int index, double score) {
+        this.index = index;
         this.score = score;
     }
 
-    public int getId() {
-        return id;
+    /**
+     * Returns the index of this output node.
+     *
+     * @return the index of this output node
+     */
+    public int getIndex() {
+        return index;
     }
 
+    /**
+     * Returns the score of this output node.
+     *
+     * @return the score of this output node
+     */
     public double getScore() {
         return score;
     }
@@ -52,7 +65,7 @@ public class Result implements Comparable<Result> {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-                .add("id", getId())
+                .add("index", getIndex())
                 .add("score", getScore()).toString();
     }
 
