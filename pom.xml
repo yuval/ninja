@@ -5,8 +5,33 @@
   <artifactId>ninja</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>ninja</name>
+  <description>Neural Networks in Java</description>
+  <url>https://github.com/yuval/ninja</url>
   <packaging>pom</packaging>
   <inceptionYear>2015</inceptionYear>
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+ <developers>
+   <developer>
+     <id>yuval</id>
+     <name>Yuval Merhav</name>
+     <email>yuval.mer@gmail.com</email>
+   </developer>
+   <developer>
+     <id>joelb-git</id>
+     <name>Joel Barry</name>
+     <email>jmb236@gmail.com</email>
+   </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git@github.com:yuval/ninja.git</connection>
+    <developerConnection>scm:git:git@github.com:yuval/ninja.git</developerConnection>
+    <url>git@github.com:yuval/ninja.git</url>
+  </scm>
   <properties>
      <compiler.fork>false</compiler.fork>
      <jdk.level>1.7</jdk.level>
