@@ -147,7 +147,7 @@ include labels, even though they are ignored.
 
 ```
 $ script/run-java.sh com.basistech.ninja.Predict
-Usage: Predict model examples response
+Usage: Predict model examples response [--verbose]
 ```
 
 ```
@@ -162,19 +162,20 @@ the 10 examples correctly.
 ```
 $ paste <(head samples/data/mnist/examples.test | cut -f1 -d ' ') \
 <(head response.txt)
-2	2
-3	3
-1	1
-5	0
-1	1
-4	6
-5	5
-1	1
-0	0
-7	7
+2	2	0.988703
+3	3	0.833391
+1	1	0.980135
+5	0	0.304052
+1	1	0.954124
+4	6	0.432976
+5	5	0.501261
+1	1	0.818590
+0	0	0.925333
+7	7	0.984165
 ```
 
-The accuracy on the full test set is also 80%.
+The accuracy on the full test set is also 80%. The third column is the score of the predicted output.
+You can run Predict in verbose mode to see the score of every output node. 
 
 You may get better results by tuning the learning parameters,
 e.g. number epochs, learning-rate, etc.
