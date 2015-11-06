@@ -20,6 +20,7 @@
 package com.basistech.ninja;
 
 import com.basistech.ninja.ejml.ColVector;
+import com.basistech.ninja.ejml.NinjaMatrix;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import org.junit.Test;
@@ -226,12 +227,12 @@ public class NetworkTest {
                 "1 2 3 4 5",
                 "-6 -7 -8 -9 -10");
         Reader reader = new StringReader(Joiner.on('\n').join(lines));
-        Network net = Network.fromText(reader);
+        Network net = Network.loadModel(reader);
 
         assertEquals(3, net.getNumLayers());
-        assertEquals(3, net.getNumNeurons(0));
-        assertEquals(4, net.getNumNeurons(1));
-        assertEquals(2, net.getNumNeurons(2));
+        assertEquals(3, net.getNumUnits(0));
+        assertEquals(4, net.getNumUnits(1));
+        assertEquals(2, net.getNumUnits(2));
 
         NinjaMatrix w1 = new NinjaMatrix(4, 4, true,
                 1, 2, 3, 4,
@@ -268,7 +269,7 @@ public class NetworkTest {
         bw.close();
 
         Reader reader = new StringReader(sw.toString());
-        Network net2 = Network.fromText(reader);
+        Network net2 = Network.loadModel(reader);
 
         assertTrue(w1.isIdentical(net2.getWeightMatrix(0), 0.00001));
         assertTrue(w2.isIdentical(net2.getWeightMatrix(1), 0.00001));
@@ -328,7 +329,7 @@ public class NetworkTest {
         int maxEpochs = 100000;
         double learningRate = 0.01;
         for (int i = 0; i < maxEpochs; i++) {
-            net.stochasticGD(x, y, learningRate);
+            net.trainBatch(x, y, learningRate);
         }
 
         System.out.println(net.apply(0, 0));

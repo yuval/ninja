@@ -47,11 +47,11 @@ file with the following format:
 * one example per line
 * fields are separated by a space
 * first field is an integer label
-* remaining field are of the form `feature:value`, where `feature` is
+* remaining fields are of the form `feature:value`, where `feature` is
   an integer and value is a floating point number
 * feature indexes start at 0
 
-For example, here are the first few lines on the sample training data:
+For example, here are the first few lines of the sample training data:
 
 ```
 $ head -n3 samples/data/mnist/examples.train

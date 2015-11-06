@@ -21,19 +21,21 @@ package com.basistech.ninja;
 
 import com.basistech.ninja.ejml.ColVector;
 
+/**
+ * {@code Functions} is a collection of useful functions for neural networks.
+ */
 public final class Functions {
-    static final Function IDENTITY = new Identity();
-    static final Function SIGMOID = new Sigmoid();
-    static final Function SIGMOID_PRIME = new SigmoidPrime();
+    /**
+     * sigmoid(x) = 1.0 / (1 + Math.exp(-x))
+     */
+    public static final Function SIGMOID = new Sigmoid();
+    /**
+     * The derivative of the sigmoid function
+     */
+    public static final Function SIGMOID_PRIME = new SigmoidPrime();
 
     private Functions() {
         // empty
-    }
-
-    private static class Identity implements Function {
-        public double apply(double x) {
-            return x;
-        }
     }
 
     private static class Sigmoid implements Function {
@@ -49,6 +51,13 @@ public final class Functions {
         }
     }
 
+    /**
+     * Applies the function on every element of the column vector.
+     *
+     * @param f the function to apply
+     * @param vec the input vector to apply the function on
+     * @return the result of applying the function on the input vector
+     */
     public static ColVector apply(Function f, ColVector vec) {
         ColVector result = new ColVector(vec.numRows());
         for (int i = 0; i < vec.numRows(); i++) {

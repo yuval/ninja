@@ -31,16 +31,40 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/**
+ * {@code ExamplesIterator} is an iterator over a file of examples in the following format:
+ *
+ * <ul>
+ *  <li> one example per line
+ *  <li> fields are separated by a space
+ *  <li> first field is an integer label
+ *  <li> remaining fields are of the form feature:value, where feature is an integer and
+ *       value is a floating point number feature indexes start at 0
+ * </ul>
+ * For example, here are the first few lines of the sample training data:
+ *
+ * <pre>
+ *  $ head -n3 samples/data/mnist/examples.train
+ *  6 0:0.0 1:0.0 ...  99:0.09375000 ... 783:0.0
+ *  2 0:0.0 1:0.0 ... 151:0.26171875 ... 783:0.0
+ *  3 0:0.0 1:0.0 ... 152:0.99609375 ... 783:0.0
+ * </pre>
+ */
 public class ExamplesIterator implements Iterator<List<String>>, Iterable<List<String>> {
     private final BufferedReader reader;
     private final int batchSize;
     private int linesSeen;
     private int numLines;
 
-    // taking a file and not a reader so that we can
-    // iterate over it twice. TODO: fix this
+    /**
+     * Constructs an examples iterator given an examples file and a batch size.
+     *
+     * @param f the examples file
+     * @param batchSize the maximum number of examples to return in each iteration
+     * @throws IOException
+     */
+    // TODO: Taking a file and not a reader so that we can iterate over it twice. We need a better solution.
     public ExamplesIterator(File f, int batchSize) throws IOException {
-        // TODO: Avoid reading the file twice!
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(f), Charsets.UTF_8))) {
             while (reader.readLine() != null) {
@@ -55,7 +79,7 @@ public class ExamplesIterator implements Iterator<List<String>>, Iterable<List<S
     /**
      * Returns an iterator over a set of elements of type List<String>.
      *
-     * @return an Iterator.
+     * @return an Iterator
      */
     @Override
     public Iterator<List<String>> iterator() {

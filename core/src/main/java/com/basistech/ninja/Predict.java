@@ -32,6 +32,26 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.List;
 
+/**
+ * Command line driver for generating predictions given a trained neural network model
+ * and an examples file in the following format:
+ *
+ * <ul>
+ *  <li> one example per line
+ *  <li> fields are separated by a space
+ *  <li> first field is an integer label (required but currently ignored for prediction)
+ *  <li> remaining fields are of the form feature:value, where feature is an integer and
+ *       value is a floating point number feature indexes start at 0
+ * </ul>
+ *
+ * For example:
+ *
+ * <pre>
+ *  6 0:0.0 1:0.0 ...  99:0.09375000 ... 783:0.0
+ *  2 0:0.0 1:0.0 ... 151:0.26171875 ... 783:0.0
+ *  3 0:0.0 1:0.0 ... 152:0.99609375 ... 783:0.0
+ * </pre>
+ */
 public class Predict {
     Network net;
 
@@ -44,19 +64,29 @@ public class Predict {
         return Network.sort(outVector);
     }
 
+    /**
+     * Command line interface to make predictions.
+     *
+     * <pre>
+     *  Usage: Predict model examples response [--verbose]
+     * </pre>
+     *
+     * @param args command line arguments
+     * @throws IOException
+     */
     public static void main(String[] args) throws IOException {
         if (args.length != 3 && args.length != 4) {
             System.err.println("Usage: Predict model examples response [--verbose]");
             System.exit(1);
         }
 
-        Network net = Network.fromText(new File(args[0]));
+        Network net = Network.loadModel(new File(args[0]));
         File examplesFile = new File(args[1]);
         File responseFile = new File(args[2]);
         boolean verbose = args.length == 4 && args[3].equalsIgnoreCase("--verbose");
         Predict that = new Predict(net);
 
-        int inputNeurons = net.getNumNeurons(0);
+        int inputNeurons = net.getNumUnits(0);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
             new FileInputStream(examplesFile), Charsets.UTF_8));
@@ -85,14 +115,14 @@ public class Predict {
                 }
 
                 List<Result> results = that.predict(x);
-                String prediction = String.valueOf(results.get(0).getId());
+                String prediction = String.valueOf(results.get(0).getIndex());
                 writer.append(prediction);
                 writer.append('\t');
                 writer.append(String.format("%f", results.get(0).getScore()));
                 writer.newLine();
                 if (verbose) {
                     for (Result result : results) {
-                        writer.append(String.format("\t%f\t%s", result.getScore(), result.getId()));
+                        writer.append(String.format("\t%f\t%s", result.getScore(), result.getIndex()));
                         writer.newLine();
                     }
                 }
