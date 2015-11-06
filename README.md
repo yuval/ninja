@@ -10,6 +10,9 @@ datasets.  The work is based on [Neural Networks and Deep
 Learning](http://neuralnetworksanddeeplearning.com/) and Andrew Ng's
 [machine learning course](https://www.coursera.org/learn/machine-learning).
 
+Currently ninja supports only fully-connected feed forward networks with a 
+sigmoid activation function.    
+
 Building
 --------
 
