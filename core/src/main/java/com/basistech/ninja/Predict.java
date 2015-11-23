@@ -101,8 +101,8 @@ public class Predict {
                 ColVector x = new ColVector(inputNeurons);
                 for (int i = 1; i < fields.length; i++) {
                     String[] feature = fields[i].split(":");
-                    int index = Integer.valueOf(feature[0]);
-                    double value = Double.valueOf(feature[1]);
+                    int index = Integer.parseInt(feature[0]);
+                    double value = Double.parseDouble(feature[1]);
                     if (index < 0 || index >= inputNeurons) {
                         throw new RuntimeException(
                             String.format(

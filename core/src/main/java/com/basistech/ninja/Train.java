@@ -74,7 +74,7 @@ public class Train {
         net.writeModel(modelFile);
     }
 
-    void parseExamples(List<String> lines) throws IOException {
+    void parseExamples(List<String> lines) {
         int inputNeurons = net.getNumUnits(0);
         int outputNeurons = net.getNumUnits(net.getNumLayers() - 1);
 
@@ -88,7 +88,7 @@ public class Train {
 
             // 1 1:1 2:1 5:1
             String[] fields = line.split("\\s+");
-            int yval = Integer.valueOf(fields[0]);
+            int yval = Integer.parseInt(fields[0]);
             if (yval < 0 || yval >= outputNeurons) {
                 // TODO: Fix bogus lineno
                 throw new RuntimeException(
@@ -101,8 +101,8 @@ public class Train {
             y[lineno].set(yval, 1.0);
             for (int i = 1; i < fields.length; i++) {
                 String[] feature = fields[i].split(":");
-                int index = Integer.valueOf(feature[0]);
-                double value = Double.valueOf(feature[1]);
+                int index = Integer.parseInt(feature[0]);
+                double value = Double.parseDouble(feature[1]);
                 if (index < 0 || index >= inputNeurons) {
                     // TODO: Fix bogus lineno
                     throw new RuntimeException(

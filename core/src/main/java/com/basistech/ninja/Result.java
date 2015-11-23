@@ -53,13 +53,7 @@ public class Result implements Comparable<Result> {
 
     @Override
     public int compareTo(Result o) {
-        if (score < o.score) {
-            return -1;
-        } else if (score > o.score) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return Double.compare(score, o.score);
     }
 
     @Override
